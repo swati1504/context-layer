@@ -5,7 +5,8 @@ import { listEvents, listReports, sbEnabled } from "@/lib/supabase";
 export async function GET(req: Request) {
   if (!isAdmin(req)) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const all = await listEvents();
-  const study = all.filter((e) => e.props?.study === true);
+  // pids starting with s_test or s_demo are rehearsal runs and are ignored in the results
+  const study = all.filter((e) => e.props?.study === true && !/^s_(test|demo)/.test(e.pid));
   const pids = new Set(study.map((e) => e.pid));
   const count = (ev: string) => study.filter((e) => e.event === ev).length;
   const fam: Record<string, number> = {};

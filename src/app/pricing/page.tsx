@@ -32,7 +32,7 @@ export default function Pricing() {
             <li>Saved history synced across devices</li>
             <li>Coming soon: ask a follow-up question, and see what changed since you last read</li>
           </ul>
-          <Link className="btn" style={{ display: "grid", placeItems: "center", textDecoration: "none" }} href="/">Join the waitlist</Link>
+          <Link className="btn" style={{ display: "grid", placeItems: "center", textDecoration: "none" }} href="/">Try it free first</Link>
         </section>
         <section className="plan">
           <h3>Teams and classes</h3>
