@@ -58,7 +58,7 @@ export type Perspective = { who: string; stance: string; quote: string; from: "p
 export type Summary2 = { text: string; quote: string; quotes: string[]; from: "primary" | "reporting"; parts?: Claim2[] };
 export type VerifiedCard = {
   v: 2;
-  rev: 3;
+  rev: 4;
   headline: string;
   publisher_headline: string;
   summary: Summary2;
@@ -137,7 +137,7 @@ export async function generateCard(a: Article): Promise<VerifiedCard> {
 
   return {
     v: 2,
-    rev: 3,
+    rev: 4,
     headline,
     publisher_headline: a.title,
     summary,

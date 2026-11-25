@@ -5,7 +5,7 @@ import { takeBudget } from "./budget";
 
 const mem = new Map<string, VerifiedCard>();
 const inflight = new Map<string, Promise<VerifiedCard>>();
-const isV2 = (c: unknown): c is VerifiedCard => (c as { v?: number; rev?: number } | null)?.rev === 3;
+const isV2 = (c: unknown): c is VerifiedCard => (c as { v?: number; rev?: number } | null)?.rev === 4;
 
 export async function lookupCard(url: string): Promise<VerifiedCard | null> {
   const m = mem.get(url);
