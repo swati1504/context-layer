@@ -145,7 +145,7 @@ export default function Home() {
   return (
     <main className="shell">
       <h1 className="hero">Understand the story, not just the headline.</h1>
-      <p className="lede">Tech news in plain words. Highlight anything that confuses you, and every claim links to where it came from.</p>
+      <p className="lede">Tech news in plain words. Highlight anything that confuses you to get more context, and every claim links to where it came from.</p>
 
       <form onSubmit={(e) => { e.preventDefault(); submitPaste(); }}>
         <div className="paste">
@@ -210,7 +210,7 @@ export default function Home() {
                 <>
                   <p className="summary">{card.summary.text}</p>
                   <ul className="pts">{card.key_points.filter((k) => k.text !== card.summary.text).slice(0, 3).map((k, i) => <li key={i}>{k.text}</li>)}</ul>
-                  <p className="curious">{card.question}</p>
+                  <button className="curious" onClick={() => toggleRow(it)} aria-expanded={isOpen}>{card.question}</button>
                 </>
               ) : it.teaser && <p className="teaser">{it.teaser}</p>}
 

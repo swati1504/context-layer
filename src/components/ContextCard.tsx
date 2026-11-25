@@ -6,9 +6,10 @@ import { copyShare, log, markReported, pid, toggleFav, useFavs } from "@/lib/sto
 export type Claim = { text: string; quote: string; from: "primary" | "reporting" };
 export type Card = {
   v: 2;
+  rev?: number;
   headline: string;
   publisher_headline: string;
-  summary: Claim;
+  summary: Claim & { quotes?: string[] };
   key_points: Claim[];
   how_it_works: Claim[];
   perspectives: { who: string; stance: string; quote: string; from: "primary" | "reporting" }[];
@@ -22,7 +23,7 @@ export type Card = {
 };
 
 export const readTime = (s: number) => (s < 60 ? `${s} sec read` : `${Math.round(s / 60)} min read`);
-export const factsOf = (c: Card) => [c.summary, ...c.key_points, ...c.how_it_works].map((x) => `${x.text} (${x.quote})`).concat(c.perspectives.map((p) => `${p.who}: ${p.stance} (${p.quote})`));
+export const factsOf = (c: Card) => [c.summary, ...c.key_points, ...c.how_it_works].map((x) => `${x.text} (${(x as { quotes?: string[] }).quotes?.join(" ... ") ?? x.quote})`).concat(c.perspectives.map((p) => `${p.who}: ${p.stance} (${p.quote})`));
 
 // Opens the original page scrolled to the passage and highlighted (browser text-fragment link).
 function fragmentUrl(url: string, quote: string) {
@@ -155,11 +156,11 @@ export default function ContextCard({ card, url, inline = false }: { card: Card;
       )}
 
       <div className="sec">
-        <h5>Who&rsquo;s saying what</h5>
-        {sides.length === 0 && <p style={{ margin: 0, color: "var(--muted)" }}>This story reports one account. No other position is quoted in it.</p>}
+        <h5>What people are saying</h5>
+        {sides.length === 0 && <p style={{ margin: 0, color: "var(--muted)" }}>This story reports one account. Nobody else is quoted in it.</p>}
         {sides.map((p, i) => (
           <div className="side" key={i}>
-            <b>{p.who}{p.from === "primary" && <span className="tag-from">Company statement</span>}</b>
+            <b>{p.who}{p.from === "primary" && <span className="tag-from">From the company</span>}</b>
             <ClaimLine c={{ text: p.stance, quote: p.quote, from: p.from }} card={card} section="perspective" url={url} />
           </div>
         ))}

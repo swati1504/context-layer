@@ -56,11 +56,11 @@ export default function Explainable({ children, facts, headline, url }: { childr
       {children}
       {sel && !pop && (
         <button className="xbtn" style={{ left: Math.max(70, Math.min(sel.x, window.innerWidth - 70)), top: sel.top > 64 ? sel.top - 44 : sel.bottom + 10 }} onMouseDown={(e) => e.preventDefault()} onClick={explain}>
-          Explain this
+          Get more context
         </button>
       )}
       {pop && (
-        <div ref={popRef} className="xpop" role="dialog" aria-label="Explanation" style={{ left: clampX(pop.x, 340), ...(window.innerHeight - pop.bottom > 240 ? { top: pop.bottom + 10 } : { bottom: window.innerHeight - pop.top + 10 }) }}>
+        <div ref={popRef} className="xpop" role="dialog" aria-label="More context" style={{ left: clampX(pop.x, 340), ...(window.innerHeight - pop.bottom > 240 ? { top: pop.bottom + 10 } : { bottom: window.innerHeight - pop.top + 10 }) }}>
           <button className="x" aria-label="Close explanation" onClick={() => setPop(null)}>×</button>
           <q>“{pop.text.length > 90 ? pop.text.slice(0, 87) + "…" : pop.text}”</q>
           {pop.state === "load" && <span>Explaining…</span>}
