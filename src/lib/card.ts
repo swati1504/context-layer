@@ -46,7 +46,7 @@ Rules:
 - key_points: 3-4 crisp one-line claims that ADD details the summary does not already say (who it affects, dates, limits, what is uncertain). Never repeat the summary.
 - how_it_works: 2-4 claims explaining the mechanism in everyday words (skip if the text gives no mechanism).
 - perspectives: 0-3 collective views of what people are saying about the story, grouped by who is speaking (for example "The company", "Critics and some users", "Regulators", "Analysts"). "who" is that group label (use a named organization only when one named source speaks for the group), "stance" is what that group says in one sentence, with a verbatim quote. Never invent a viewpoint.
-- jargon: only terms or product names a NON-TECHNICAL reader would not know. Skip household names (ChatGPT, Google, Amazon, Meta, AI). 0-4 items, each with a one-sentence plain explanation the text supports.
+- jargon: only terms, acronyms or product names a NON-TECHNICAL reader would not know AND that appear verbatim in your summary or key points. Skip household names (ChatGPT, Google, Amazon, Meta, AI), ordinary English phrases (for example code of conduct), and names of channels, menus or pages. Prefer real technical terms (IP address, encryption, API). 0-3 items, each with a one-sentence plain explanation the text supports.
 - question: one curious question a beginner would ask about the story, under 14 words (for example "What is a usage meter, and does it change anything for me?").
 - tags: 3-6 lowercase tags (companies, topics, who it affects).
 - If the text does not support a claim, leave it out.`;
@@ -79,7 +79,7 @@ export type Perspective = { who: string; stance: string; quote: string; from: "p
 export type Summary2 = { text: string; quote: string; quotes: string[]; from: "primary" | "reporting"; parts?: Claim2[] };
 export type VerifiedCard = {
   v: 2;
-  rev: 5;
+  rev: 6;
   headline: string;
   publisher_headline: string;
   summary: Summary2;
@@ -158,14 +158,14 @@ export async function generateCard(a: Article): Promise<VerifiedCard> {
 
   return {
     v: 2,
-    rev: 5,
+    rev: 6,
     headline,
     publisher_headline: a.title,
     summary,
     key_points: kp,
     how_it_works: hw,
     perspectives: ps,
-    jargon: raw.jargon,
+    jargon: raw.jargon.filter((j) => { const all = [summary.text, ...kp.map((c) => c.text), ...hw.map((c) => c.text)].join(" ").toLowerCase(); return all.includes(j.term.toLowerCase()) && !/^(code of conduct|my channel)$/i.test(j.term.trim()); }).slice(0, 3),
     question: raw.question,
     tags: raw.tags,
     read_seconds: Math.max(20, Math.round((words / 220) * 60 / 10) * 10),

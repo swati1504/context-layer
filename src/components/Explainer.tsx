@@ -33,7 +33,7 @@ function Cited({ claims, card, start }: { claims: Claim[]; card: Card; start: nu
   );
 }
 
-function Assistant({ url, card }: { url: string; card: Card }) {
+function Assistant({ url, card, suggestions }: { url: string; card: Card; suggestions: string[] }) {
   const key = "cl_ask_" + url;
   const [used, setUsed] = useState(0);
   const [q, setQ] = useState("");
@@ -73,6 +73,11 @@ function Assistant({ url, card }: { url: string; card: Card }) {
           {x.state === "done" && x.background && <p className="bg"><small>{BG}</small>{x.background}</p>}
         </div>
       ))}
+      {left > 0 && log2.length === 0 && suggestions.length > 0 && (
+        <div className="chips" role="group" aria-label="Suggested questions">
+          {suggestions.map((t) => <button type="button" className="chip" key={t} onClick={() => ask(t)}>{t}</button>)}
+        </div>
+      )}
       {left > 0 ? (
         <form className="paste" onSubmit={(e) => { e.preventDefault(); ask(q); }}>
           <input aria-label="Your question about this story" placeholder="Does this affect me?" value={q} maxLength={300} onChange={(e) => setQ(e.target.value)} />
@@ -127,7 +132,7 @@ export default function Explainer({ url, card }: { url: string; card: Card }) {
           ))}
         </div>
       )}
-      <Assistant url={url} card={card} />
+      <Assistant url={url} card={card} suggestions={[...(s.ex?.faq.map((f) => f.question) ?? []), card.question].filter((v, i, a) => v && a.indexOf(v) === i).slice(0, 4)} />
     </>
   );
 }

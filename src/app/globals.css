@@ -250,3 +250,7 @@ table.t th { color: var(--muted); font-weight: 500; }
 .assist { padding: 16px; background: var(--accent-bg); border-radius: 14px; }
 .qa { margin: 0 0 14px; padding-bottom: 12px; border-bottom: 1px solid var(--accent-line); }
 .qa-q { margin: 0 0 4px; font-weight: 700; }
+
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
+.chip{font:inherit;font-size:13px;text-align:left;padding:7px 12px;border-radius:999px;border:1px solid var(--line,rgba(255,255,255,.18));background:transparent;color:inherit;cursor:pointer}
+.chip:hover{border-color:currentColor}

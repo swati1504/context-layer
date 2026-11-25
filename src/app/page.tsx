@@ -227,8 +227,9 @@ export default function Home() {
               )}
               {(!study || stage === "choose") && (
                 <div className="actions">
-                  <button className="ghost" aria-expanded={isOpen} disabled={slot?.status === "loading"} onClick={() => toggleRow(it)}>
-                    {slot?.status === "loading" ? "Reading…" : isOpen ? "Hide context" : "Get context"}
+                  {rich && <Link className="btn" href={`/story?u=${encodeURIComponent(it.url)}`}>Read the story</Link>}
+                  <button className={rich ? "ghost" : "ghost"} aria-expanded={isOpen} disabled={slot?.status === "loading"} onClick={() => toggleRow(it)}>
+                    {slot?.status === "loading" ? "Reading…" : isOpen ? "Hide context" : rich ? "Quick context" : "Get context"}
                   </button>
                   {study && !slot && !isOpen && <button className="quiet" onClick={() => { log("skip_click", { url: it.url, familiarity: fam[it.url] ?? null }); setStages((s) => ({ ...s, [it.url]: "skipped" })); }}>Continue without context</button>}
                 </div>
