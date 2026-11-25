@@ -1,4 +1,4 @@
-import { JSDOM } from "jsdom";
+import { parseHTML } from "linkedom";
 import { Readability } from "@mozilla/readability";
 import { lookupSource } from "./sources";
 
@@ -22,8 +22,10 @@ export async function fetchArticle(url: string): Promise<Article> {
   // redirects must stay on approved domains
   if (!lookupSource(res.url)) throw new FetchError("not_approved", "Redirected off the approved list");
   const html = await res.text();
-  const dom = new JSDOM(html, { url: res.url });
-  const parsed = new Readability(dom.window.document).parse();
+  const { document } = parseHTML(html);
+  // Readability resolves relative URLs via documentURI; set it so it does not throw
+  try { Object.defineProperty(document, "documentURI", { value: res.url }); } catch {}
+  const parsed = new Readability(document as unknown as Document).parse();
   const text = (parsed?.textContent ?? "").replace(/\s+/g, " ").trim();
   if (text.length < 800) throw new FetchError("too_short", "Article text too short or paywalled");
   return { url: res.url, title: parsed?.title ?? "", text: text.slice(0, 24000), sourceName: src.name, tier: src.tier };

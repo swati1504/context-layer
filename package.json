@@ -11,7 +11,7 @@
   "dependencies": {
     "@mozilla/readability": "^0.6.0",
     "@supabase/supabase-js": "^2.119.2",
-    "jsdom": "^31.0.1",
+    "linkedom": "^0.18.15",
     "next": "16.4.6",
     "openai": "^7.64.0",
     "react": "19.3.0",
@@ -20,7 +20,6 @@
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "4.3.3",
-    "@types/jsdom": "^30.0.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
