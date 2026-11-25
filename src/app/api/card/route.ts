@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { fetchArticle, articleFromText, FetchError } from "@/lib/fetchArticle";
 import { generateCard } from "@/lib/card";
+import { getCachedCard, saveCard } from "@/lib/supabase";
 
 export const maxDuration = 60;
 
@@ -15,13 +16,17 @@ export async function POST(req: Request) {
   try {
     const key = text ? "" : String(url ?? "");
     if (key && cache.has(key)) return NextResponse.json({ card: cache.get(key), cached: true });
+    if (key) {
+      const stored = await getCachedCard(key);
+      if (stored) { cache.set(key, stored); return NextResponse.json({ card: stored, cached: true }); }
+    }
     const today = new Date().toISOString().slice(0, 10);
     if (today !== day) { day = today; used = 0; }
     if (used >= DAILY_LIMIT) return NextResponse.json({ error: "limit", message: "Daily card limit reached. Try again tomorrow." }, { status: 429 });
     const article = text ? articleFromText(String(text)) : await fetchArticle(key);
     used++;
     const card = await generateCard(article);
-    if (key) cache.set(key, card);
+    if (key) { cache.set(key, card); await saveCard(key, card); }
     return NextResponse.json({ card });
   } catch (e) {
     if (e instanceof FetchError) return NextResponse.json({ error: e.code, message: e.message }, { status: 422 });
