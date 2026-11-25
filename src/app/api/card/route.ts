@@ -12,6 +12,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ card });
   } catch (e) {
     if (e instanceof FetchError) return NextResponse.json({ error: e.code, message: e.message }, { status: 422 });
+    console.error("card route failed:", e instanceof Error ? `${e.name}: ${e.message}\n${e.stack}` : e);
     return NextResponse.json({ error: "server", message: "Could not build the card" }, { status: 500 });
   }
 }
