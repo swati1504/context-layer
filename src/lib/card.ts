@@ -38,6 +38,7 @@ Rules:
 - Use ONLY facts stated in the provided text. Never add outside knowledge.
 - The text may have a [PRIMARY] part (the company's own announcement) and a [REPORTING] part (a news article). Mark each claim's "from" as "primary" or "reporting" according to where its quote comes from. If there is no [PRIMARY] part, use "reporting" for everything.
 - Every claim needs a "quote": an EXACT, verbatim passage (20-200 characters) copied from the text it comes from. Never paraphrase the quote.
+- If the text describes a rumor, leak, report, dummy unit, plan or prediction, the claim must say so ("reportedly", "a leaked dummy suggests", "plans to"). Never state a rumor as settled fact, in the headline and summary too.
 - A claim must be fully supported by its quote, including timing (started vs. now), scope (some vs. all), certainty (reportedly, may), and who said it. When a company says something, attribute it ("OpenAI says...").
 - headline: a plain-English headline of at most 12 words that says what happened. Specific, factual, no hype, no clickbait.
 - summary: ONE plain sentence (under 28 words) giving the whole story, with its own quote.
