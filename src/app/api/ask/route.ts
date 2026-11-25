@@ -32,9 +32,12 @@ export async function POST(req: Request) {
     const r = await llmJson({ system: SYSTEM, user: `${text}\n\nREADER QUESTION: ${question}`, schemaName: "answer", schema });
     const raw = Raw.parse(r.json);
     const body = (f: "primary" | "reporting") => (f === "primary" && a.primary ? a.primary.text : a.text);
+    const trace: Record<string, unknown> = { raw: raw.answer.length };
     const pre: Claim2[] = raw.answer.filter((c) => quoteExists(body(c.from), c.quote) && datesOk(c.text, c.quote));
+    trace.afterQuote = pre.length;
     const { bad } = await supportCheck(pre.map((c) => ({ t: c.text, q: c.quote })));
     let parts = pre.filter((_, i) => !bad.has(i));
+    trace.afterSupport = parts.length;
     if (parts.length) {
       try {
         const rel = await llmJson({
@@ -43,12 +46,13 @@ export async function POST(req: Request) {
           schemaName: "relevance",
           schema: { type: "object", additionalProperties: false, required: ["direct"], properties: { direct: { type: "boolean" } } },
         });
+        trace.direct = (rel.json as { direct: boolean }).direct;
         if (!(rel.json as { direct: boolean }).direct) parts = [];
       } catch { /* keep the checked answer if the relevance check fails */ }
     }
     const bg = raw.background.trim();
     const background = bg && bg.length < 300 && !/\d|\$|%/.test(bg) && !/\b(often|usually|typically|generally|most|many)\b/i.test(bg) ? bg : null;
-    return NextResponse.json({ answered: parts.length > 0, parts, background });
+    return NextResponse.json({ answered: parts.length > 0, parts, background, ...(b?.debug ? { trace, rawAnswer: raw.answer } : {}) });
   } catch (e) {
     if (e instanceof FetchError) return NextResponse.json({ error: e.code }, { status: 422 });
     console.error("ask failed:", e instanceof Error ? e.message : e);
