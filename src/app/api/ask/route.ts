@@ -32,7 +32,7 @@ export async function POST(req: Request) {
     const r = await llmJson({ system: SYSTEM, user: `${text}\n\nREADER QUESTION: ${question}`, schemaName: "answer", schema });
     const raw = Raw.parse(r.json);
     const body = (f: "primary" | "reporting") => (f === "primary" && a.primary ? a.primary.text : a.text);
-    const trace: Record<string, unknown> = { raw: raw.answer.length };
+    const trace: Record<string, unknown> = { raw: raw.answer.length, len: a.text.length, opt: /opt[- ]?out/i.test(a.text), primary: a.primary?.name ?? null, primaryLen: a.primary?.text.length ?? 0, tail: a.text.slice(-300) };
     const pre: Claim2[] = raw.answer.filter((c) => quoteExists(body(c.from), c.quote) && datesOk(c.text, c.quote));
     trace.afterQuote = pre.length;
     const { bad } = await supportCheck(pre.map((c) => ({ t: c.text, q: c.quote })));
