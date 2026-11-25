@@ -26,7 +26,7 @@ export const readTime = (s: number) => (s < 60 ? `${s} sec read` : `${Math.round
 export const factsOf = (c: Card) => [c.summary, ...c.key_points, ...c.how_it_works].map((x) => `${x.text} (${(x as { quotes?: string[] }).quotes?.join(" ... ") ?? x.quote})`).concat(c.perspectives.map((p) => `${p.who}: ${p.stance} (${p.quote})`));
 
 // Opens the original page scrolled to the passage and highlighted (browser text-fragment link).
-function fragmentUrl(url: string, quote: string) {
+export function fragmentUrl(url: string, quote: string) {
   if (!url) return "";
   const words = quote.replace(/\s+/g, " ").trim().split(" ");
   const enc = (s: string) => encodeURIComponent(s).replace(/-/g, "%2D");
@@ -159,7 +159,7 @@ function Report({ card, url, onDone }: { card: Card; url: string; onDone: () => 
 }
 
 // `inline` = used inside a feed row that already shows the headline, summary and key points.
-export default function ContextCard({ card, url, inline = false }: { card: Card; url: string; inline?: boolean }) {
+export default function ContextCard({ card, url, inline = false, extra }: { card: Card; url: string; inline?: boolean; extra?: React.ReactNode }) {
   const [open, setOpen] = useState<string | null>(null);
   const [reporting, setReporting] = useState(false);
   const [copied, setCopied] = useState("");
@@ -184,6 +184,8 @@ export default function ContextCard({ card, url, inline = false }: { card: Card;
           {card.key_points.map((c, i) => <ClaimLine key={i} c={c} card={card} section="short" url={url} />)}
         </div>
       )}
+
+      {extra}
 
       {card.how_it_works.length > 0 && (
         <div className="sec">

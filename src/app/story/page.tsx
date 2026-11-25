@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import ContextCard, { factsOf, type Card } from "@/components/ContextCard";
 import Explainable from "@/components/Explainable";
+import Explainer from "@/components/Explainer";
 import { addHistory } from "@/lib/profile";
 import { log } from "@/lib/store";
 
@@ -37,7 +38,7 @@ export default function Story() {
       {state.s === "err" && <p className="err" role="alert">{state.msg} <Link href="/">Go to the feed</Link></p>}
       {state.s === "done" && state.card && (
         <Explainable facts={factsOf(state.card)} headline={state.card.headline} url={url}>
-          <ContextCard card={state.card} url={url} />
+          <ContextCard card={state.card} url={url} extra={<Explainer url={url} card={state.card} />} />
         </Explainable>
       )}
     </main>

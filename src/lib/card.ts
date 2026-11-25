@@ -39,6 +39,7 @@ Rules:
 - The text may have a [PRIMARY] part (the company's own announcement) and a [REPORTING] part (a news article). Mark each claim's "from" as "primary" or "reporting" according to where its quote comes from. If there is no [PRIMARY] part, use "reporting" for everything.
 - Every claim needs a "quote": an EXACT, verbatim passage (20-200 characters) copied from the text it comes from. Never paraphrase the quote.
 - If the text describes a rumor, leak, report, dummy unit, plan or prediction, the claim must say so ("reportedly", "a leaked dummy suggests", "plans to"). Never state a rumor as settled fact, in the headline and summary too.
+- Dates: copy a date and its year only as the quote gives them, tied to the same event. A practice that began on one date and a new policy that takes effect on another are different events. Never infer a year.
 - A claim must be fully supported by its quote, including timing (started vs. now), scope (some vs. all), certainty (reportedly, may), and who said it. When a company says something, attribute it ("OpenAI says...").
 - headline: a plain-English headline of at most 12 words that says what happened. Specific, factual, no hype, no clickbait.
 - summary_parts: 3-4 plain sentences that together read as one short news paragraph (60-90 words) telling the whole story: what happened, who is involved, what changes, what is still unclear. The FIRST sentence must state the main event itself (what happened and who did it) before any detail. EACH sentence is its own claim with its own exact verbatim quote. Keep each sentence to one fact its quote fully supports. Distinguish something newly starting from something a new policy or report only discloses as already happening.
@@ -49,6 +50,26 @@ Rules:
 - question: one curious question a beginner would ask about the story, under 14 words (for example "What is a usage meter, and does it change anything for me?").
 - tags: 3-6 lowercase tags (companies, topics, who it affects).
 - If the text does not support a claim, leave it out.`;
+
+// Deterministic date check: every year or month a claim mentions must also appear in the quote that backs it.
+const MONTHS = "January|February|March|April|June|July|August|September|October|November|December";
+export function datesOk(text: string, quote: string): boolean {
+  const q = quote.toLowerCase();
+  for (const y of text.match(/\b(?:19|20)\d{2}\b/g) ?? []) if (!q.includes(y)) return false;
+  for (const m of text.match(new RegExp(`\\b(?:${MONTHS})\\b|\\bMay\\s+\\d`, "g")) ?? []) if (!q.includes(m.toLowerCase().replace(/\s+\d$/, ""))) return false;
+  return true;
+}
+
+export const SUPPORT_SYSTEM = "You are a strict fact checker. For each numbered item you get a CLAIM and the QUOTE(S) it cites. Return the numbers of items where the quotes do NOT fully support the claim, including its timing, scope, certainty, cause, or who said it. Treat 'a company starts doing X' as unsupported when the quotes only show a policy or report disclosing that it already does X. Check dates and years too: a date in the claim must belong to the same event the quote ties it to. If the quote dates one thing (when a practice began) and the claim applies that date to another (when a new policy takes effect), it is unsupported. If the quote has no year, the claim must not state one. If a claim says more than the quotes show, it is unsupported.";
+export async function supportCheck(items: { t: string; q: string }[]): Promise<{ bad: Set<number>; inTok: number; outTok: number }> {
+  if (!items.length) return { bad: new Set(), inTok: 0, outTok: 0 };
+  try {
+    const s = await llmJson({ system: SUPPORT_SYSTEM, user: items.map((x, i) => `${i}. CLAIM: ${x.t}\n   QUOTE: ${x.q}`).join("\n"), schemaName: "support_check", schema: supportSchema });
+    return { bad: new Set(SupportOut.parse(s.json).unsupported), inTok: s.inputTokens, outTok: s.outputTokens };
+  } catch {
+    return { bad: new Set(), inTok: 0, outTok: 0 }; // if the second check fails we keep the quote-checked claims
+  }
+}
 
 const SupportOut = z.object({ unsupported: z.array(z.number()) });
 const supportSchema = { type: "object", additionalProperties: false, required: ["unsupported"], properties: { unsupported: { type: "array", items: { type: "number" } } } };
@@ -84,7 +105,7 @@ export async function generateCard(a: Article): Promise<VerifiedCard> {
   const raw = Raw.parse(r.json);
 
   const body = (from: "primary" | "reporting") => (from === "primary" && a.primary ? a.primary.text : a.text);
-  const found = <T extends { quote: string; from: "primary" | "reporting" }>(xs: T[]) => xs.filter((x) => quoteExists(body(x.from), x.quote));
+  const found = <T extends { quote: string; from: "primary" | "reporting" }>(xs: T[]) => xs.filter((x) => quoteExists(body(x.from), x.quote) && datesOk((x as unknown as { text?: string; stance?: string }).text ?? (x as unknown as { stance: string }).stance, x.quote));
 
   let parts = found(raw.summary_parts);
   let kp = found(raw.key_points);
@@ -105,7 +126,7 @@ export async function generateCard(a: Article): Promise<VerifiedCard> {
   let bad = new Set<number>();
   try {
     const s = await llmJson({
-      system: "You are a strict fact checker. For each numbered item you get a CLAIM and the QUOTE(S) it cites. Return the numbers of items where the quotes do NOT fully support the claim, including its timing, scope, certainty, cause, or who said it. Treat 'a company starts doing X' as unsupported when the quotes only show a policy or report disclosing that it already does X. If a claim says more than the quotes show, it is unsupported.",
+      system: SUPPORT_SYSTEM,
       user: list.map((x, i) => `${i}. CLAIM: ${x.t}\n   QUOTE: ${x.q}`).join("\n"),
       schemaName: "support_check",
       schema: supportSchema,
@@ -117,7 +138,7 @@ export async function generateCard(a: Article): Promise<VerifiedCard> {
   }
   let i = 0;
   parts = parts.filter(() => !bad.has(i++));
-  const headlineBad = hasSummary ? bad.has(i++) : true;
+  const headlineBad = hasSummary ? bad.has(i++) || !datesOk(raw.headline, parts.map((c) => c.quote).join(" ")) : true;
   kp = kp.filter(() => !bad.has(i++));
   hw = hw.filter(() => !bad.has(i++));
   ps = ps.filter(() => !bad.has(i++));

@@ -236,3 +236,17 @@ table.t th { color: var(--muted); font-weight: 500; }
 .evid .claimtxt { display: block; font-weight: 600; }
 .evid q { display: block; color: var(--muted); font-style: italic; margin: 2px 0 4px; quotes: "“" "”"; }
 .evid a { font-size: 13px; }
+
+.xsec { margin: 18px 0; }
+.xsec h2 { font-size: 20px; font-weight: 800; margin: 0 0 6px; letter-spacing: -0.02em; }
+.cited { margin: 0 0 8px; font-size: 17px; line-height: 1.65; }
+.cite { display: inline-block; min-width: 18px; margin-left: 3px; padding: 0 5px; font-size: 11.5px; font-weight: 700; line-height: 18px; text-align: center; text-decoration: none; color: var(--accent); background: var(--accent-bg); border-radius: 9px; vertical-align: 3px; }
+.cite:hover { background: var(--accent); color: var(--accent-ink); }
+.bg { margin: 8px 0 12px; padding: 10px 14px; background: var(--panel-2); border-left: 3px solid var(--faint); border-radius: 8px; font-size: 15px; color: var(--muted); }
+.bg small { display: block; font-size: 12px; font-weight: 700; color: var(--faint); margin-bottom: 2px; }
+.faq { border-top: 1px solid var(--line); padding: 10px 0; }
+.faq summary { cursor: pointer; font-weight: 600; }
+.faq p { margin: 8px 0 0; }
+.assist { padding: 16px; background: var(--accent-bg); border-radius: 14px; }
+.qa { margin: 0 0 14px; padding-bottom: 12px; border-bottom: 1px solid var(--accent-line); }
+.qa-q { margin: 0 0 4px; font-weight: 700; }
