@@ -15,7 +15,7 @@ const SYSTEM = `You answer a reader's question about ONE news story using ONLY t
 - answer: 1-3 short plain-English claims. Each claim is ONE sentence fully supported by an EXACT verbatim quote (20-200 characters) from the text, including its timing, scope, certainty and who said it. "from" is "primary" or "reporting". Attribute company statements.
 - Dates: only as the quote gives them, tied to the same event. Never infer a year.
 - If the text does not answer the question (including whether the reader is affected or what they can do), return an EMPTY answer list. Never answer from outside knowledge or guess.
-- background: ONLY when the question asks what a term or concept means, give a one-sentence plain definition of that term (for example what an IP address is). Otherwise an empty string. A definition only: no numbers, years, no statements about what companies or services usually do, and no claims about this story.
+- background: ONLY when the question asks what a term or concept means, give a one-sentence plain definition of that term (for example what an IP address is). Otherwise an empty string. ONLY for a generic, widely understood concept that exists independently of this story (for example IP address, encryption, large language model). NEVER for a product feature, tab, plan, policy, company-specific name, or anything this story introduces: leave it empty for those. A definition only: no numbers, years, no statements about what companies or services usually do, and no claims about this story.
 - The answer claims must DIRECTLY answer the question asked. A true fact that does not answer the question is not an answer: return an empty list instead.`;
 
 export async function POST(req: Request) {
@@ -51,7 +51,19 @@ export async function POST(req: Request) {
       } catch { /* keep the checked answer if the relevance check fails */ }
     }
     const bg = raw.background.trim();
-    const background = bg && bg.length < 300 && !/\d|\$|%/.test(bg) && !/\b(often|usually|typically|generally|most|many)\b/i.test(bg) ? bg : null;
+    let generic = false;
+    if (bg) {
+      try {
+        const g = await llmJson({
+          system: "Decide if the TERM asked about is a generic, widely understood concept that exists independently of any one company or news story (e.g. IP address, encryption, LLM, API). Product features, tabs, plans, policies, company or product names, and anything specific to one company are NOT generic.",
+          user: `QUESTION: ${question}\nDEFINITION: ${bg}`,
+          schemaName: "generic",
+          schema: { type: "object", additionalProperties: false, required: ["generic"], properties: { generic: { type: "boolean" } } },
+        });
+        generic = (g.json as { generic: boolean }).generic;
+      } catch { generic = false; }
+    }
+    const background = generic && bg && bg.length < 300 && !/\d|\$|%/.test(bg) && !/\b(often|usually|typically|generally|most|many)\b/i.test(bg) ? bg : null;
     return NextResponse.json({ answered: parts.length > 0, parts, background, ...(b?.debug ? { trace, rawAnswer: raw.answer } : {}) });
   } catch (e) {
     if (e instanceof FetchError) return NextResponse.json({ error: e.code }, { status: 422 });
