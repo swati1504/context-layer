@@ -9,7 +9,7 @@ export type Card = {
   rev?: number;
   headline: string;
   publisher_headline: string;
-  summary: Claim & { quotes?: string[] };
+  summary: Claim & { quotes?: string[]; parts?: Claim[] };
   key_points: Claim[];
   how_it_works: Claim[];
   perspectives: { who: string; stance: string; quote: string; from: "primary" | "reporting" }[];
@@ -34,16 +34,69 @@ function fragmentUrl(url: string, quote: string) {
   return `${url}#:~:text=${frag}`;
 }
 
-function ClaimLine({ c, card, section, url }: { c: { text: string; quote: string; from: "primary" | "reporting" }; card: Card; section: string; url: string }) {
+function ClaimLine({ c, card, section, url, terms }: { c: { text: string; quote: string; from: "primary" | "reporting" }; card: Card; section: string; url: string; terms?: boolean }) {
   const src = card.sources.find((s) => s.kind === c.from) ?? card.sources[card.sources.length - 1];
   const href = fragmentUrl(src?.url ?? "", c.quote);
   return (
     <div className="claim">
-      <p>{c.text}{c.from === "primary" && <span className="tag-from">{src?.name}</span>}</p>
+      <p>{terms ? <TermText text={c.text} jargon={card.jargon} url={url} /> : c.text}{c.from === "primary" && <span className="tag-from">{src?.name}</span>}</p>
       {href && (
         <a className="src" href={href} target="_blank" rel="noopener noreferrer" aria-label={`Show where this comes from in ${src?.name}: ${c.text.slice(0, 60)}`} onClick={() => log("claim_opened", { url, section })}>
           Show where this comes from
         </a>
+      )}
+    </div>
+  );
+}
+
+
+// First one or two jargon terms in a text become tappable, with the same plain explanation as the chips.
+export function TermText({ text, jargon, url }: { text: string; jargon: { term: string; plain: string }[]; url: string }) {
+  const [open, setOpen] = useState<string | null>(null);
+  const hits = jargon
+    .map((j) => ({ j, i: text.toLowerCase().indexOf(j.term.toLowerCase()) }))
+    .filter((h) => h.i >= 0)
+    .sort((a, b) => a.i - b.i)
+    .filter((h, k, all) => all.slice(0, k).every((p) => p.i + p.j.term.length <= h.i))
+    .slice(0, 2);
+  if (!hits.length) return <>{text}</>;
+  const out: React.ReactNode[] = [];
+  let at = 0;
+  hits.forEach((h) => {
+    out.push(text.slice(at, h.i));
+    out.push(
+      <button key={h.j.term} type="button" className="term" aria-expanded={open === h.j.term} onClick={() => { setOpen(open === h.j.term ? null : h.j.term); log("section_open", { url, section: "term", term: h.j.term }); }}>
+        {text.slice(h.i, h.i + h.j.term.length)}
+      </button>
+    );
+    at = h.i + h.j.term.length;
+  });
+  out.push(text.slice(at));
+  const def = hits.find((h) => h.j.term === open);
+  return <>{out}{def && <span className="termdef"><b>{def.j.term}:</b> {def.j.plain}</span>}</>;
+}
+
+// "Sources for this summary": check each sentence and bullet against its quote without leaving the feed.
+export function Evidence({ card, url }: { card: Card; url: string }) {
+  const [open, setOpen] = useState(false);
+  const items: Claim[] = [...(card.summary.parts ?? [{ text: card.summary.text, quote: card.summary.quote, from: card.summary.from }]), ...card.key_points.filter((k) => k.text !== card.summary.text).slice(0, 3)];
+  return (
+    <div className="evid">
+      <button className="linkbtn" aria-expanded={open} onClick={() => { setOpen(!open); if (!open) log("claim_opened", { url, section: "feed_evidence" }); }}>{open ? "Hide sources" : "Sources for this summary"}</button>
+      {open && (
+        <ul>
+          {items.map((c, i) => {
+            const src = card.sources.find((s) => s.kind === c.from) ?? card.sources[card.sources.length - 1];
+            const href = fragmentUrl(src?.url ?? "", c.quote);
+            return (
+              <li key={i}>
+                <span className="claimtxt">{c.text}</span>
+                <q>{c.quote}</q>
+                {href && <a href={href} target="_blank" rel="noopener noreferrer" aria-label={`Read in ${src?.name}: ${c.text.slice(0, 60)}`}>Read in original ({src?.name})</a>}
+              </li>
+            );
+          })}
+        </ul>
       )}
     </div>
   );
@@ -120,14 +173,14 @@ export default function ContextCard({ card, url, inline = false }: { card: Card;
   return (
     <div className={inline ? "card" : "card full"}>
       {!card.approved && (
-        <p className="notice" role="note"><b>Unverified source.</b> This site is not on our verified list. We still checked every quote against the page, but we cannot vouch for the publication itself.</p>
+        <p className="notice" role="note"><b>Outside our source list.</b> We still checked every quote against the page. We check whether the article supports the summary. This label only tells you whether the publisher is on our source list.</p>
       )}
       {!inline && (
         <div className="sec">
           <h1 className="story">{card.headline}</h1>
           <p className="orig">From {rep?.name}: {card.publisher_headline}</p>
           <h5>The short version</h5>
-          <ClaimLine c={card.summary} card={card} section="short" url={url} />
+          <ClaimLine c={card.summary} card={card} section="short" url={url} terms />
           {card.key_points.map((c, i) => <ClaimLine key={i} c={c} card={card} section="short" url={url} />)}
         </div>
       )}
@@ -171,7 +224,7 @@ export default function ContextCard({ card, url, inline = false }: { card: Card;
           <span className="grow">
             Sources:{" "}
             {card.sources.map((s, i) => (
-              <span key={s.url}>{i > 0 && " · "}<a href={s.url} target="_blank" rel="noopener noreferrer">{s.name}</a>{s.kind === "primary" ? " (company announcement)" : ""}{!s.approved ? " (unverified)" : ""}</span>
+              <span key={s.url}>{i > 0 && " · "}<a href={s.url} target="_blank" rel="noopener noreferrer">{s.name}</a>{s.kind === "primary" ? " (company announcement)" : ""}{!s.approved ? " (outside our source list)" : ""}</span>
             ))}
           </span>
           {url && <button className="quiet" aria-pressed={isFav} onClick={() => { const on = toggleFav({ url, title: card.headline, source: rep?.name ?? "", card }); log("favorite", { url, on }); }}>{isFav ? "Saved" : "Save"}</button>}

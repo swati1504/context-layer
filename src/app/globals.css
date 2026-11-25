@@ -226,3 +226,13 @@ table.t th { color: var(--muted); font-weight: 500; }
 .meter i { display: block; height: 100%; background: var(--accent); }
 
 @media (max-width: 520px) { .paste { flex-direction: column; } }
+
+.term { background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer; text-decoration: underline dotted var(--accent); text-decoration-thickness: 2px; text-underline-offset: 4px; }
+.term:hover, .term[aria-expanded="true"] { background: var(--accent-bg); }
+.termdef { display: block; margin: 8px 0 2px; padding: 8px 12px; background: var(--accent-bg); border-radius: 10px; font-size: 15px; }
+.evid { margin: 0 0 12px; }
+.evid ul { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 12px; }
+.evid li { padding-left: 12px; border-left: 2px solid var(--accent-line); font-size: 14.5px; }
+.evid .claimtxt { display: block; font-weight: 600; }
+.evid q { display: block; color: var(--muted); font-style: italic; margin: 2px 0 4px; quotes: "“" "”"; }
+.evid a { font-size: 13px; }

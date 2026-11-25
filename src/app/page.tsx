@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import ContextCard, { factsOf, readTime, type Card } from "@/components/ContextCard";
+import ContextCard, { Evidence, TermText, factsOf, readTime, type Card } from "@/components/ContextCard";
 import Explainable from "@/components/Explainable";
 import { addHistory, openProfile, rankReason, readHistory, useProfile } from "@/lib/profile";
 import { FREE_LIMIT, atLimit, isStudy, log, markUsed, usedCards } from "@/lib/store";
@@ -87,7 +87,7 @@ export default function Home() {
     if (u) window.location.replace(`/story?u=${encodeURIComponent(u)}`); // old share links
   }, []);
 
-  const personal = !study && view === "you" && (!!profile?.interests.length || hist.length > 0);
+  const personal = !study && view === "you" && !!profile?.interests.length;
   const ranked = useMemo(() => {
     if (!items) return null;
     const base = items.map((it, i) => ({ it, i, ...rankReason(profile, it.title + " " + it.teaser + " " + (it.card?.tags.join(" ") ?? ""), hist) }));
@@ -154,7 +154,7 @@ export default function Home() {
         </div>
       </form>
       <div className="bar">
-        <span>Works with any public article. Verified outlets are marked, others are labeled unverified.</span>
+        <span>Works with any public article. Outlets are labeled On our source list or Outside our source list.</span>
         {!study && <><span className="sep">|</span><span>{Math.min(used, FREE_LIMIT)} of {FREE_LIMIT} free links used this month. Feed stories are free. <Link href="/pricing">Plus is coming soon</Link></span></>}
       </div>
 
@@ -179,15 +179,15 @@ export default function Home() {
       )}
 
       <div className="feed-head">
-        <h2>{personal ? "Picked for you" : "Today’s tech news"}</h2>
-        {!study && (profile?.interests.length ?? 0) > 0 && (
+        <h2>Today’s tech news</h2>
+        {!study && (
           <div className="seg" role="group" aria-label="Feed view">
-            <button aria-pressed={view === "you"} onClick={() => { setView("you"); log("view_toggle", { view: "you" }); }}>For you</button>
-            <button aria-pressed={view === "all"} onClick={() => { setView("all"); log("view_toggle", { view: "all" }); }}>All news</button>
+            <button aria-pressed={personal} onClick={() => { log("view_toggle", { view: "you" }); if (!profile?.interests.length) openProfile(); else setView("you"); }}>For you</button>
+            <button aria-pressed={!personal} onClick={() => { setView("all"); log("view_toggle", { view: "all" }); }}>All news</button>
           </div>
         )}
       </div>
-      {!study && !profile && <p className="fine" style={{ margin: "10px 0 0" }}><button className="linkbtn" onClick={openProfile}>Pick your interests</button> and we will rank this list for you, and say why.</p>}
+      {!study && <p className="fine" style={{ margin: "10px 0 0" }}>Tap underlined words for a quick explanation, or highlight any text. <button className="linkbtn" onClick={openProfile}>Pick your interests</button> to rank this list for you.</p>}
 
       <div>
         {ranked === null && <p className="empty">Loading stories…</p>}
@@ -208,8 +208,9 @@ export default function Home() {
               <h3>{rich ? card.headline : it.title}</h3>
               {rich ? (
                 <>
-                  <p className="summary">{card.summary.text}</p>
+                  <p className="summary"><TermText text={card.summary.text} jargon={card.jargon} url={it.url} /></p>
                   <ul className="pts">{card.key_points.filter((k) => k.text !== card.summary.text).slice(0, 3).map((k, i) => <li key={i}>{k.text}</li>)}</ul>
+                  <Evidence card={card} url={it.url} />
                   <button className="curious" onClick={() => toggleRow(it)} aria-expanded={isOpen}>{card.question}</button>
                 </>
               ) : it.teaser && <p className="teaser">{it.teaser}</p>}

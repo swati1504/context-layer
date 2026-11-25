@@ -55,7 +55,7 @@ const supportSchema = { type: "object", additionalProperties: false, required: [
 
 export type Claim2 = { text: string; quote: string; from: "primary" | "reporting" };
 export type Perspective = { who: string; stance: string; quote: string; from: "primary" | "reporting" };
-export type Summary2 = { text: string; quote: string; quotes: string[]; from: "primary" | "reporting" };
+export type Summary2 = { text: string; quote: string; quotes: string[]; from: "primary" | "reporting"; parts?: Claim2[] };
 export type VerifiedCard = {
   v: 2;
   rev: 3;
@@ -127,7 +127,7 @@ export async function generateCard(a: Article): Promise<VerifiedCard> {
     parts = [kp[0]]; // fall back to a verified key point
     kp = kp.slice(1);
   }
-  const summary: Summary2 = { text: parts.map((c) => c.text).join(" "), quote: parts[0].quote, quotes: parts.map((c) => c.quote), from: parts[0].from };
+  const summary: Summary2 = { text: parts.map((c) => c.text).join(" "), quote: parts[0].quote, quotes: parts.map((c) => c.quote), from: parts[0].from, parts };
   const headline = headlineBad ? a.title : raw.headline;
   const verified = parts.length + kp.length + hw.length + ps.length;
   const words = [summary.text, ...kp.map((c) => c.text), ...hw.map((c) => c.text)].join(" ").split(/\s+/).length;

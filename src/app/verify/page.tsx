@@ -20,8 +20,8 @@ export default function Verify() {
       </ol>
       <p>At the bottom of each story you will see how many source passages are attached. These are three different checks, and we do all of them except the last: finding the quote, checking that the quote supports the claim, and checking that the publisher is right. We do not judge whether the publisher is right.</p>
 
-      <h2>Verified and unverified sources</h2>
-      <p>Outlets on the list below are marked as verified sources. You can paste a link from any other public site too. We still check every quote against that page, but the story is labeled unverified, because we cannot vouch for the publication. If a page is behind a paywall or blocks automated readers, you can paste the article text instead.</p>
+      <h2>On our source list, and outside it</h2>
+      <p>We check whether the article supports the summary. The label only tells you whether the publisher is on our source list below. You can paste a link from any other public site too. We still check every quote against that page, and the story is labeled Outside our source list. If a page is behind a paywall or blocks automated readers, you can paste the article text instead.</p>
 
       <h2>What we measured</h2>
       <p>Before adding the automatic check, we audited 60 claims by hand against their articles.</p>
@@ -39,8 +39,8 @@ export default function Verify() {
         <li>Your picks only change the order of the feed, and each story says why it is there.</li>
       </ul>
 
-      <h2>Verified sources</h2>
-      <p>These outlets are on our verified list. Some block automated readers, so a few stories may fail to load.</p>
+      <h2>Our source list</h2>
+      <p>These outlets are on our source list. Some block automated readers, so a few stories may fail to load.</p>
       <ul className="srcs">
         {Object.values(SOURCES).map((s) => <li key={s.name}>{s.name}<small>{TIER[s.tier]}</small></li>)}
       </ul>
