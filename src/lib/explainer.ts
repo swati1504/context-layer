@@ -32,7 +32,7 @@ Rules:
 export type Section = { heading: string; claims: Claim2[]; background: string | null };
 export type Faq = { question: string; answers: Claim2[]; answered: boolean };
 export type Explainer = {
-  rev: 2;
+  rev: 3;
   sections: Section[];
   faq: Faq[];
   verification: { total: number; verified: number; dropped: number };
@@ -63,5 +63,5 @@ export async function generateExplainer(a: Article): Promise<Explainer> {
     return { question: f.question, answers, answered: answers.length > 0 };
   });
   if (sections.every((s) => s.claims.length === 0)) throw new Error("no verifiable explainer");
-  return { rev: 2, sections, faq, verification: { total: all.length, verified: good.size, dropped: all.length - good.size } };
+  return { rev: 3, sections, faq, verification: { total: all.length, verified: good.size, dropped: all.length - good.size } };
 }
