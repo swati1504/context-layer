@@ -27,6 +27,8 @@ export function log(event: string, props: Record<string, unknown> = {}) {
 // ---- favorites ----
 export type Fav = { url: string; title: string; source: string; savedAt: number; card: Card };
 export const getFavs = () => get<Fav[]>("cl_favs", []);
+export function removeFav(url: string) { set("cl_favs", getFavs().filter((x) => x.url !== url)); window.dispatchEvent(new Event("cl-favs")); }
+export function restoreFav(f: Fav) { set("cl_favs", [f, ...getFavs().filter((x) => x.url !== f.url)]); window.dispatchEvent(new Event("cl-favs")); }
 export function toggleFav(f: Omit<Fav, "savedAt">): boolean {
   const all = getFavs();
   const has = all.some((x) => x.url === f.url);
@@ -45,7 +47,7 @@ export function useFavs() {
   return f;
 }
 
-// ---- free plan usage: 5 cards a month ----
+// ---- free plan usage: 5 pasted links a month (feed stories and shared stories are never counted) ----
 export const FREE_LIMIT = 5;
 const mk = () => "cl_used_" + new Date().toISOString().slice(0, 7);
 export const usedCards = () => get<string[]>(mk(), []);
@@ -55,3 +57,9 @@ export const atLimit = (url: string) => !usedCards().includes(url) && usedCards(
 // ---- reported claims ----
 export const getReported = () => get<string[]>("cl_reported", []);
 export function markReported(k: string) { set("cl_reported", [...getReported(), k]); }
+
+// ---- sharing: stories have their own page ----
+export const storyLink = (url: string) => `${window.location.origin}/story?u=${encodeURIComponent(url)}`;
+export async function copyShare(url: string): Promise<boolean> {
+  try { await navigator.clipboard.writeText(storyLink(url)); log("share", { url }); return true; } catch { return false; }
+}

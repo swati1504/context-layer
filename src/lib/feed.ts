@@ -41,3 +41,23 @@ export async function getFeed(): Promise<FeedItem[]> {
     .sort((a, b) => +new Date(b.published) - +new Date(a.published))
     .slice(0, 20);
 }
+
+// Group stories about the same thing (similar headlines) into one row with "also covered by".
+export type Story = FeedItem & { also: { source: string; url: string }[] };
+const STOP = new Set(["the", "a", "an", "to", "of", "in", "for", "and", "on", "is", "its", "it", "as", "at", "by", "with", "from", "that", "this", "new", "says", "will", "are", "be", "how", "what", "why"]);
+const words = (t: string) => new Set(t.toLowerCase().replace(/[^a-z0-9 ]/g, " ").split(/\s+/).filter((w) => w.length > 2 && !STOP.has(w)));
+function similar(a: Set<string>, b: Set<string>) {
+  let n = 0;
+  for (const w of a) if (b.has(w)) n++;
+  return n >= 3 && n / Math.min(a.size, b.size) >= 0.5;
+}
+export function groupStories(items: FeedItem[]): Story[] {
+  const out: (Story & { w: Set<string> })[] = [];
+  for (const it of items) {
+    const w = words(it.title);
+    const g = out.find((o) => o.source !== it.source && similar(o.w, w));
+    if (g) g.also.push({ source: it.source, url: it.url });
+    else out.push({ ...it, also: [], w });
+  }
+  return out.map(({ w, ...s }) => { void w; return s; });
+}

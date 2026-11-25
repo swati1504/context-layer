@@ -7,18 +7,21 @@ const TIER: Record<string, string> = { primary: "Primary source", reporting: "Re
 export default function Verify() {
   return (
     <main className="narrow prose">
-      <h1 className="page-title">How we verify every card</h1>
+      <h1 className="page-title">How we check every story</h1>
       <p>A summary is only useful if you can trust it. So a card is not a summary you have to take on faith. Every claim on it points back to the exact passage in the original article.</p>
 
       <h2>What happens when you tap Get context</h2>
       <ol>
-        <li><b>We only read approved sources.</b> The link has to come from a site on the list below. Anything else is declined, because we cannot verify it.</li>
-        <li><b>We read the full article.</b> We fetch the page and pull out the article text.</li>
-        <li><b>A language model drafts the card.</b> It has to attach an exact quote from the article to every claim, and it may not use outside knowledge.</li>
-        <li><b>Our code checks the quotes.</b> If a quote is not found word for word in the article, the claim is removed before you see the card.</li>
-        <li><b>You can check it yourself.</b> Tap Show where this comes from to see the passage, or open the article scrolled to that passage.</li>
+        <li><b>We read the original.</b> Paste any public article. If the story links to the company&rsquo;s own announcement, such as OpenAI&rsquo;s post, we read that first and use the reporter as a second source.</li>
+        <li><b>A language model drafts the story.</b> It has to attach an exact quote to every claim, and it may not use outside knowledge.</li>
+        <li><b>Our code finds each quote.</b> If a quote is not found word for word in the source, the claim is removed before you see it.</li>
+        <li><b>A second check reads each claim against its quote.</b> Finding a quote is not enough, so we check that the quote supports the whole claim, including timing, scope, certainty and who said it. Claims that go further than their quote are removed.</li>
+        <li><b>You can check it yourself.</b> Tap Show where this comes from to open the source at that passage.</li>
       </ol>
-      <p>The counter at the top of each card, such as 6 of 7 claims verified, shows how many claims survived the check and how many were removed.</p>
+      <p>At the bottom of each story you will see how many source passages are attached. These are three different checks, and we do all of them except the last: finding the quote, checking that the quote supports the claim, and checking that the publisher is right. We do not judge whether the publisher is right.</p>
+
+      <h2>Verified and unverified sources</h2>
+      <p>Outlets on the list below are marked as verified sources. You can paste a link from any other public site too. We still check every quote against that page, but the story is labeled unverified, because we cannot vouch for the publication. If a page is behind a paywall or blocks automated readers, you can paste the article text instead.</p>
 
       <h2>What we measured</h2>
       <p>Before adding the automatic check, we audited 60 claims by hand against their articles.</p>
@@ -27,23 +30,23 @@ export default function Verify() {
         <div><strong>1</strong><span>claim made up</span></div>
         <div><strong>2</strong><span>claims we could not find</span></div>
       </div>
-      <p>That is why the quote check exists. A claim that cannot point to the article does not get shown.</p>
+      <p>That audit was of our first version, before the support check above. We have not yet re-run it on the new checks, so treat the numbers as the starting point, not the current score.</p>
 
       <h2>What a card does not do</h2>
       <ul>
         <li>It does not tell you what to think or what to buy.</li>
         <li>It does not check whether the article itself is right. It checks that the card matches the article.</li>
-        <li>The note on why a story matters to you is written for your profile from the verified claims. It is a possibility, not a prediction.</li>
+        <li>Your picks only change the order of the feed, and each story says why it is there.</li>
       </ul>
 
-      <h2>Approved sources</h2>
-      <p>These sites can be read today. Some block automated readers, and paywalled sites cannot be read, so a few may fail for a given story.</p>
+      <h2>Verified sources</h2>
+      <p>These outlets are on our verified list. Some block automated readers, so a few stories may fail to load.</p>
       <ul className="srcs">
         {Object.values(SOURCES).map((s) => <li key={s.name}>{s.name}<small>{TIER[s.tier]}</small></li>)}
       </ul>
 
       <h2>Think a claim is wrong?</h2>
-      <p>Every claim has a Report a wrong claim button. Reported claims are marked as under review and checked by a person.</p>
+      <p>Use Report a problem at the bottom of any story. You can point to a specific claim and tell us what we missed. The team reviews every report.</p>
     </main>
   );
 }

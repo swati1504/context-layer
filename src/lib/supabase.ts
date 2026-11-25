@@ -25,6 +25,14 @@ export async function getCachedCard(url: string): Promise<unknown | null> {
   const rows = (await r.json()) as { card: unknown }[];
   return rows[0]?.card ?? null;
 }
+export async function getCachedCards(urls: string[]): Promise<Record<string, unknown>> {
+  if (!urls.length) return {};
+  const list = urls.map((u) => `"${u.replace(/"/g, "")}"`).join(",");
+  const r = await rest(`cards?url=in.(${encodeURIComponent(list)})&select=url,card`);
+  if (!r) return {};
+  const rows = (await r.json()) as { url: string; card: unknown }[];
+  return Object.fromEntries(rows.map((x) => [x.url, x.card]));
+}
 export async function saveCard(url: string, card: unknown) {
   await rest("cards", { method: "POST", body: JSON.stringify({ url, card }), prefer: "resolution=merge-duplicates,return=minimal" });
 }

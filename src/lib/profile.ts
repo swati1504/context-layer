@@ -1,11 +1,16 @@
 "use client";
 import { useEffect, useState } from "react";
 
-export type Profile = { role: string; industry: string; comfort: "beginner" | "some" | "comfortable" };
+export type Profile = { interests: string[]; role: string; industry: string; comfort: "beginner" | "some" | "comfortable" };
 const K = "cl_profile";
 
 export function loadProfile(): Profile | null {
-  try { const s = localStorage.getItem(K); return s ? (JSON.parse(s) as Profile) : null; } catch { return null; }
+  try {
+    const s = localStorage.getItem(K);
+    if (!s) return null;
+    const o = JSON.parse(s) as Partial<Profile>;
+    return { interests: o.interests ?? [], role: o.role ?? "", industry: o.industry ?? "", comfort: o.comfort ?? "beginner" };
+  } catch { return null; }
 }
 export function saveProfile(p: Profile) {
   try { localStorage.setItem(K, JSON.stringify(p)); } catch {}
@@ -31,31 +36,42 @@ export const COMFORT = [
   { v: "comfortable", label: "Comfortable", hint: "Keep it brief" },
 ] as const;
 
-// Feed ranking: simple keyword overlap between the story and the person's role and industry.
-const KEYS: Record<string, string[]> = {
-  "Advertising and media": ["ad ", "ads", "advertis", "campaign", "brand", "creator", "social", "instagram", "tiktok", "meta", "youtube", "streaming", "media"],
-  Marketing: ["ad ", "ads", "advertis", "campaign", "brand", "creator", "social", "instagram", "tiktok", "meta", "search"],
-  "Consumer and retail": ["amazon", "shop", "retail", "commerce", "walmart", "toy", "consumer", "phone", "earbuds", "price"],
-  "Finance and banking": ["bank", "payment", "stripe", "crypto", "fintech", "stock", "earnings", "sec ", "funding", "valuation"],
-  Finance: ["bank", "payment", "stripe", "crypto", "stock", "earnings", "funding", "valuation"],
-  Healthcare: ["health", "medical", "fda", "patient", "drug", "hospital", "clinical"],
-  Education: ["student", "school", "teacher", "college", "learning", "kids", "children", "education"],
-  Student: ["student", "intern", "job", "career", "college", "free", "chatgpt", "school"],
-  "Government and policy": ["regulat", "ftc", "fcc", "law", "court", "privacy", "attorney", "senate", "ban", "policy"],
-  "Legal or policy": ["regulat", "ftc", "fcc", "law", "court", "privacy", "attorney", "copyright", "lawsuit", "ban"],
-  "Software and tech": ["developer", "api", "open source", "model", "chip", "gpu", "cloud", "code", "agent"],
-  Engineer: ["developer", "api", "open source", "model", "chip", "gpu", "cloud", "code", "agent"],
-  "Product or design": ["design", "app", "ux", "product", "launch", "interface", "agent"],
-  Sales: ["sales", "crm", "customers", "enterprise", "pricing", "agent"],
+// Interests are what the feed ranks on. Each maps to words that show up in headlines.
+export const INTERESTS: Record<string, string[]> = {
+  "AI at work": ["agent", "copilot", "chatgpt", "workplace", "enterprise", "productivity", "automation", "jobs", "work "],
+  "Privacy": ["privacy", "data", "tracking", "surveillance", "consent", "advertis", "ads "],
+  "Apps I use": ["app ", "apps", "instagram", "tiktok", "youtube", "whatsapp", "iphone", "android", "chatgpt", "gemini", "spotify"],
+  "Big Tech": ["google", "apple", "meta", "amazon", "microsoft", "openai", "nvidia", "anthropic"],
+  "Money and business": ["funding", "valuation", "earnings", "revenue", "acquisition", "ipo", "stock", "raises", "billion"],
+  "Chips and hardware": ["chip", "gpu", "nvidia", "hardware", "device", "semiconductor", "satellite", "robot"],
+  "Kids and school": ["kids", "children", "teen", "student", "school", "education", "teacher"],
+  "Health and science": ["health", "medical", "fda", "patient", "drug", "science", "research", "climate"],
+  "Policy and law": ["regulat", "ftc", "court", "law", "lawsuit", "senate", "ban", "policy", "copyright", "antitrust"],
+  "Creators and media": ["creator", "music", "film", "video", "streaming", "news", "media", "artist", "publisher"],
+  "Startups": ["startup", "founder", "seed", "series a", "raises", "launch"],
+  "Security": ["security", "hack", "breach", "vulnerab", "malware", "attack", "scam"],
 };
-export function rankReason(p: Profile | null, text: string): { score: number; reason?: string } {
-  if (!p) return { score: 0 };
+const ROLE_TO_INTEREST: Record<string, string> = { Marketing: "Creators and media", Finance: "Money and business", Healthcare: "Health and science", Education: "Kids and school", "Legal or policy": "Policy and law", Engineer: "AI at work", Student: "Kids and school" };
+
+// ---- on-device reading history (tags of cards the person opened) ----
+const H = "cl_history";
+export function readHistory(): string[] { try { return JSON.parse(localStorage.getItem(H) ?? "[]") as string[]; } catch { return []; } }
+export function addHistory(tags: string[]) {
+  try { localStorage.setItem(H, JSON.stringify([...new Set([...tags.map((t) => t.toLowerCase()), ...readHistory()])].slice(0, 60))); } catch {}
+}
+
+// Explainable ranking: every boost has a reason a person can read.
+export function rankReason(p: Profile | null, text: string, history: string[]): { score: number; reason?: string } {
   const t = ` ${text.toLowerCase()} `;
-  let best = 0, reason: string | undefined;
-  for (const [label, words] of [[p.industry, KEYS[p.industry]], [p.role, KEYS[p.role]]] as const) {
-    if (!words) continue;
-    const n = words.filter((w) => t.includes(w)).length;
-    if (n > best) { best = n; reason = label === p.industry ? `Because you work in ${p.industry.toLowerCase()}` : `Because you are in ${p.role.toLowerCase()}`; }
+  let score = 0, reason: string | undefined;
+  if (p) {
+    const mine = [...p.interests, ...(ROLE_TO_INTEREST[p.role] && p.interests.length === 0 ? [ROLE_TO_INTEREST[p.role]] : [])];
+    for (const i of mine) {
+      const n = (INTERESTS[i] ?? []).filter((w) => t.includes(w)).length;
+      if (n > score) { score = n; reason = `Because you picked ${i}`; }
+    }
   }
-  return { score: best, reason };
+  const h = history.find((tag) => tag.length > 3 && t.includes(tag));
+  if (h && score < 3) { score = Math.max(score, 1) + 0.5; reason = reason && score > 1.5 ? reason : `Because you read about ${h}`; }
+  return { score, reason };
 }

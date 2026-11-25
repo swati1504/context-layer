@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin";
 import { getFeed } from "@/lib/feed";
-import { fetchArticle } from "@/lib/fetchArticle";
-import { generateCard } from "@/lib/card";
-import { getCachedCard, saveCard } from "@/lib/supabase";
+import { buildCard, lookupCard } from "@/lib/cardService";
 
 export const maxDuration = 300;
 
@@ -16,9 +14,8 @@ export async function POST(req: Request) {
   const results: { url: string; status: string; verified?: string }[] = [];
   for (const url of urls) {
     try {
-      if (await getCachedCard(url)) { results.push({ url, status: "already built" }); continue; }
-      const card = await generateCard(await fetchArticle(url));
-      await saveCard(url, card);
+      if (await lookupCard(url)) { results.push({ url, status: "already built" }); continue; }
+      const card = await buildCard(url);
       results.push({ url, status: "built", verified: `${card.verification.verified}/${card.verification.total}` });
     } catch (e) {
       results.push({ url, status: "failed: " + (e instanceof Error ? e.message : "error") });

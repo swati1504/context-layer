@@ -14,10 +14,10 @@ export default function Pricing() {
           <div className="price">$0</div>
           <small style={{ color: "var(--muted)" }}>no account needed</small>
           <ul>
-            <li>5 cards a month</li>
-            <li>Verified claims with quotes</li>
-            <li>Personal profile and a ranked feed</li>
-            <li>Save cards on this device</li>
+            <li>5 pasted links a month, plus every story in the feed</li>
+            <li>Source passages attached to every claim</li>
+            <li>A feed ranked by your interests, with reasons</li>
+            <li>Save stories in this browser</li>
           </ul>
           <Link className="btn sec-btn" style={{ display: "grid", placeItems: "center", textDecoration: "none" }} href="/">Start reading</Link>
         </section>
@@ -26,11 +26,11 @@ export default function Pricing() {
           <div className="price">$4.99<small> / month</small></div>
           <small style={{ color: "var(--muted)" }}>or $39 a year</small>
           <ul>
-            <li>Unlimited cards</li>
-            <li>Follow companies and topics</li>
-            <li>Daily digest of what you follow</li>
-            <li>Saved history synced across devices</li>
-            <li>Coming soon: ask a follow-up question, and see what changed since you last read</li>
+            <li>Unlimited pasted links</li>
+            <li>Planned: follow companies and topics</li>
+            <li>Planned: daily digest of what you follow</li>
+            <li>Planned: saved history synced across devices</li>
+            <li>Planned: ask a follow-up question, and see what changed since you last read</li>
           </ul>
           <Link className="btn" style={{ display: "grid", placeItems: "center", textDecoration: "none" }} href="/">Try it free first</Link>
         </section>
@@ -39,9 +39,9 @@ export default function Pricing() {
           <div className="price">Let&rsquo;s talk</div>
           <small style={{ color: "var(--muted)" }}>for schools and workplaces</small>
           <ul>
-            <li>Shared reading lists</li>
-            <li>Plus for everyone in the group</li>
-            <li>Help getting started</li>
+            <li>Planned: shared reading lists</li>
+            <li>Planned: Plus for everyone in the group</li>
+            <li>Planned: help getting started</li>
           </ul>
           <Link className="btn sec-btn" style={{ display: "grid", placeItems: "center", textDecoration: "none" }} href="/verify">See how it works</Link>
         </section>

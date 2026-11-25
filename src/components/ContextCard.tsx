@@ -1,21 +1,30 @@
 "use client";
-import { useEffect, useState } from "react";
-import { openProfile, useProfile } from "@/lib/profile";
-import { getReported, log, markReported, pid, toggleFav, useFavs } from "@/lib/store";
+import Link from "next/link";
+import { useState } from "react";
+import { copyShare, log, markReported, pid, toggleFav, useFavs } from "@/lib/store";
 
-export type Claim = { text: string; quote: string };
+export type Claim = { text: string; quote: string; from: "primary" | "reporting" };
 export type Card = {
+  v: 2;
   headline: string;
-  whats_new: Claim[];
+  publisher_headline: string;
+  summary: Claim;
+  key_points: Claim[];
   how_it_works: Claim[];
-  perspectives?: { who: string; stance: string; quote: string }[];
+  perspectives: { who: string; stance: string; quote: string; from: "primary" | "reporting" }[];
   jargon: { term: string; plain: string }[];
+  question: string;
   tags: string[];
+  read_seconds: number;
   verification: { total: number; verified: number; dropped: number };
-  source: { name: string; tier: string; url: string };
+  approved: boolean;
+  sources: { kind: "primary" | "reporting"; name: string; url: string; approved: boolean }[];
 };
 
-// Opens the original article scrolled to the passage and highlighted (browser text-fragment link).
+export const readTime = (s: number) => (s < 60 ? `${s} sec read` : `${Math.round(s / 60)} min read`);
+export const factsOf = (c: Card) => [c.summary, ...c.key_points, ...c.how_it_works].map((x) => `${x.text} (${x.quote})`).concat(c.perspectives.map((p) => `${p.who}: ${p.stance} (${p.quote})`));
+
+// Opens the original page scrolled to the passage and highlighted (browser text-fragment link).
 function fragmentUrl(url: string, quote: string) {
   if (!url) return "";
   const words = quote.replace(/\s+/g, " ").trim().split(" ");
@@ -24,44 +33,16 @@ function fragmentUrl(url: string, quote: string) {
   return `${url}#:~:text=${frag}`;
 }
 
-function ClaimItem({ text, quote, url, section }: { text: string; quote: string; url: string; section: string }) {
-  const [show, setShow] = useState(false);
-  const [rep, setRep] = useState<"idle" | "form" | "done">("idle");
-  const key = url + "|" + text.slice(0, 40);
-  useEffect(() => { if (getReported().includes(key)) setRep("done"); }, [key]);
-  const link = fragmentUrl(url, quote);
-
-  async function report(reason: string) {
-    setRep("done");
-    markReported(key);
-    log("report", { url, section, reason });
-    fetch("/api/report", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ url, claim: text, reason, pid: pid() }) }).catch(() => {});
-  }
-
+function ClaimLine({ c, card, section, url }: { c: { text: string; quote: string; from: "primary" | "reporting" }; card: Card; section: string; url: string }) {
+  const src = card.sources.find((s) => s.kind === c.from) ?? card.sources[card.sources.length - 1];
+  const href = fragmentUrl(src?.url ?? "", c.quote);
   return (
     <div className="claim">
-      <p>{text}</p>
-      <div className="claim-acts">
-        <button className="linkbtn" aria-expanded={show} onClick={() => { setShow(!show); if (!show) log("claim_opened", { url, section }); }}>
-          {show ? "Hide the passage" : "Show where this comes from"}
-        </button>
-        {rep === "idle" && <button className="linkbtn dim" onClick={() => setRep("form")}>Report a wrong claim</button>}
-        {rep === "done" && <span className="under-review">Reported. This claim is under review.</span>}
-      </div>
-      {rep === "form" && (
-        <div className="define" role="group" aria-label="Why is this claim wrong?">
-          <b>What is wrong with it?</b>
-          <div className="claim-acts" style={{ marginTop: 8 }}>
-            {["It is not in the article", "It is misleading", "It is out of date"].map((r) => <button key={r} className="quiet" onClick={() => report(r)}>{r}</button>)}
-            <button className="linkbtn dim" onClick={() => setRep("idle")}>Cancel</button>
-          </div>
-        </div>
-      )}
-      {show && (
-        <>
-          <p className="quote">{quote}</p>
-          {link && <a className="linkbtn" href={link} target="_blank" rel="noopener noreferrer">Open the article at this passage</a>}
-        </>
+      <p>{c.text}{c.from === "primary" && <span className="tag-from">{src?.name}</span>}</p>
+      {href && (
+        <a className="src" href={href} target="_blank" rel="noopener noreferrer" aria-label={`Show where this comes from in ${src?.name}: ${c.text.slice(0, 60)}`} onClick={() => log("claim_opened", { url, section })}>
+          Show where this comes from
+        </a>
       )}
     </div>
   );
@@ -87,103 +68,119 @@ function Simpler({ subject, text, quote, url }: { subject: string; text: string;
   );
 }
 
-function WhyItMatters({ card, url }: { card: Card; url: string }) {
-  const profile = useProfile();
-  const [line, setLine] = useState<string | null>(null);
-  const [err, setErr] = useState(false);
-  const pkey = profile ? `cl_why|${url}|${profile.role}|${profile.industry}|${profile.comfort}` : "";
-
-  useEffect(() => {
-    setLine(null); setErr(false);
-    if (!profile) return;
-    try { const c = localStorage.getItem(pkey); if (c) { setLine(c); return; } } catch {}
-    let dead = false;
-    fetch("/api/personalize", {
-      method: "POST", headers: { "content-type": "application/json" },
-      body: JSON.stringify({ profile, headline: card.headline, claims: [...card.whats_new, ...card.how_it_works].map((c) => c.text) }),
-    }).then((r) => r.json()).then((j) => {
-      if (dead) return;
-      if (j.line) { setLine(j.line); try { localStorage.setItem(pkey, j.line); } catch {} } else setErr(true);
-    }).catch(() => !dead && setErr(true));
-    return () => { dead = true; };
-  }, [profile, pkey, card]);
-
+function Report({ card, url, onDone }: { card: Card; url: string; onDone: () => void }) {
+  const claims = [card.summary, ...card.key_points, ...card.how_it_works].map((c) => c.text).concat(card.perspectives.map((p) => p.stance));
+  const [which, setWhich] = useState("");
+  const [reason, setReason] = useState("It is not in the source");
+  const [note, setNote] = useState("");
+  const [sent, setSent] = useState<string | null>(null);
+  function send(e: React.FormEvent) {
+    e.preventDefault();
+    const claim = (which || "(whole story)") + (note.trim() ? ` || NOTE: ${note.trim()}` : "");
+    log("report", { url, reason });
+    markReported(url + "|" + which.slice(0, 40));
+    fetch("/api/report", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ url, claim, reason, pid: pid() }) }).catch(() => {});
+    setSent(which || "the whole story");
+  }
+  if (sent) return <p className="report" role="status">Thanks. We logged your report on: {sent.length > 90 ? sent.slice(0, 87) + "…" : sent}. The team reviews every report, and a claim that is wrong gets removed or fixed. <button className="linkbtn" onClick={onDone}>Close</button></p>;
   return (
-    <div className="sec">
-      <h5>Why it matters to you</h5>
-      {!profile && (
-        <div className="why">
-          <p style={{ margin: "0 0 10px" }}>Tell us your role and industry and we will explain what this could mean for you.</p>
-          <button className="ghost" onClick={openProfile}>Set up your profile</button>
-        </div>
-      )}
-      {profile && !line && !err && <p className="skeleton" style={{ marginTop: 0 }}>Writing this for you…</p>}
-      {profile && err && <p className="err" style={{ marginTop: 0 }}>Could not write this right now. Reopen the card to try again.</p>}
-      {profile && line && <div className="why">{line}<small>Written for your profile ({profile.role}, {profile.industry}). Based only on the verified claims above.</small></div>}
-    </div>
+    <form className="report" onSubmit={send} aria-label="Report a problem">
+      <label>What is wrong?
+        <select value={which} onChange={(e) => setWhich(e.target.value)}>
+          <option value="">The story as a whole</option>
+          {claims.map((c, i) => <option key={i} value={c}>{c.length > 80 ? c.slice(0, 77) + "…" : c}</option>)}
+        </select>
+      </label>
+      <label>The problem
+        <select value={reason} onChange={(e) => setReason(e.target.value)}>
+          {["It is not in the source", "It is misleading", "It is out of date", "Something else"].map((r) => <option key={r}>{r}</option>)}
+        </select>
+      </label>
+      <label>What did we miss? (optional)
+        <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} maxLength={400} />
+      </label>
+      <div className="actions"><button className="btn">Send report</button><button type="button" className="quiet" onClick={onDone}>Cancel</button></div>
+    </form>
   );
 }
 
-export default function ContextCard({ card, url, onShare }: { card: Card; url: string; onShare?: () => void }) {
+// `inline` = used inside a feed row that already shows the headline, summary and key points.
+export default function ContextCard({ card, url, inline = false }: { card: Card; url: string; inline?: boolean }) {
   const [open, setOpen] = useState<string | null>(null);
+  const [reporting, setReporting] = useState(false);
+  const [copied, setCopied] = useState("");
   const favs = useFavs();
-  const isFav = favs.some((f) => f.url === url);
-  const src = card.source.url || url;
-  const v = card.verification;
-  const sides = card.perspectives ?? [];
-  const quoteFor = (term: string) =>
-    [...card.how_it_works, ...card.whats_new].find((c) => (c.text + c.quote).toLowerCase().includes(term.toLowerCase()))?.quote ??
-    card.how_it_works[0]?.quote ?? card.whats_new[0]?.quote ?? "";
+  const isFav = !!url && favs.some((f) => f.url === url);
+  const sides = [...card.perspectives].sort((a, b) => (a.from === "primary" ? 0 : 1) - (b.from === "primary" ? 0 : 1));
+  const passages = 1 + card.key_points.length + card.how_it_works.length + card.perspectives.length;
+  const rep = card.sources.find((s) => s.kind === "reporting");
+  const quoteFor = (term: string) => [...card.how_it_works, ...card.key_points].find((c) => (c.text + c.quote).toLowerCase().includes(term.toLowerCase()))?.quote ?? card.how_it_works[0]?.quote ?? card.summary.quote;
 
   return (
-    <div className="card">
-      <h4>{card.headline}</h4>
-      <span className="proof">{v.verified} of {v.total} claims verified against the article</span>
-      {v.dropped > 0 && <p className="removed">{v.dropped} {v.dropped === 1 ? "claim was" : "claims were"} left out because we could not find {v.dropped === 1 ? "it" : "them"} in the article.</p>}
+    <div className={inline ? "card" : "card full"}>
+      {!card.approved && (
+        <p className="notice" role="note"><b>Unverified source.</b> This site is not on our verified list. We still checked every quote against the page, but we cannot vouch for the publication itself.</p>
+      )}
+      {!inline && (
+        <div className="sec">
+          <h1 className="story">{card.headline}</h1>
+          <p className="orig">From {rep?.name}: {card.publisher_headline}</p>
+          <h5>The short version</h5>
+          <ClaimLine c={card.summary} card={card} section="short" url={url} />
+          {card.key_points.map((c, i) => <ClaimLine key={i} c={c} card={card} section="short" url={url} />)}
+        </div>
+      )}
 
-      <div className="sec">
-        <h5>What&rsquo;s new</h5>
-        {card.whats_new.map((c, i) => <ClaimItem key={i} text={c.text} quote={c.quote} url={src} section="whats_new" />)}
-      </div>
-
-      <div className="sec">
-        <h5>How it works</h5>
-        {card.how_it_works.map((c, i) => <ClaimItem key={i} text={c.text} quote={c.quote} url={src} section="how_it_works" />)}
-        {card.how_it_works.length > 0 && <Simpler url={src} subject="How it works" text={card.how_it_works.map((c) => c.text).join(" ")} quote={card.how_it_works.map((c) => c.quote).join(" ")} />}
-        {card.jargon.length > 0 && (
-          <>
-            <div className="chips">
-              {card.jargon.map((j) => (
-                <button key={j.term} className="chip" aria-expanded={open === j.term} onClick={() => { setOpen(open === j.term ? null : j.term); log("section_open", { url: src, section: "jargon", term: j.term }); }}>{j.term}</button>
-              ))}
-            </div>
-            {card.jargon.filter((j) => j.term === open).map((j) => (
-              <div key={j.term}>
-                <p className="define"><b>{j.term}:</b> {j.plain}</p>
-                <Simpler url={src} subject={j.term} text={j.plain} quote={quoteFor(j.term)} />
+      {card.how_it_works.length > 0 && (
+        <div className="sec">
+          <h5>How it works</h5>
+          {card.how_it_works.map((c, i) => <ClaimLine key={i} c={c} card={card} section="how_it_works" url={url} />)}
+          <Simpler url={url} subject="How it works" text={card.how_it_works.map((c) => c.text).join(" ")} quote={card.how_it_works.map((c) => c.quote).join(" ")} />
+          {card.jargon.length > 0 && (
+            <>
+              <div className="chips">
+                {card.jargon.map((j) => (
+                  <button key={j.term} className="chip" aria-expanded={open === j.term} onClick={() => { setOpen(open === j.term ? null : j.term); log("section_open", { url, section: "jargon", term: j.term }); }}>{j.term}</button>
+                ))}
               </div>
-            ))}
-          </>
-        )}
-      </div>
-
-      <WhyItMatters card={card} url={url} />
+              {card.jargon.filter((j) => j.term === open).map((j) => (
+                <div key={j.term}>
+                  <p className="define"><b>{j.term}:</b> {j.plain}</p>
+                  <Simpler url={url} subject={j.term} text={j.plain} quote={quoteFor(j.term)} />
+                </div>
+              ))}
+            </>
+          )}
+        </div>
+      )}
 
       <div className="sec">
-        <h5>Different sides</h5>
-        {sides.length === 0 && <p style={{ margin: 0, color: "var(--muted)" }}>This article reports one account of the story. No other position is quoted in it.</p>}
+        <h5>Who&rsquo;s saying what</h5>
+        {sides.length === 0 && <p style={{ margin: 0, color: "var(--muted)" }}>This story reports one account. No other position is quoted in it.</p>}
         {sides.map((p, i) => (
           <div className="side" key={i}>
-            <b>{p.who}</b>
-            <ClaimItem text={p.stance} quote={p.quote} url={src} section="perspective" />
+            <b>{p.who}{p.from === "primary" && <span className="tag-from">Company statement</span>}</b>
+            <ClaimLine c={{ text: p.stance, quote: p.quote, from: p.from }} card={card} section="perspective" url={url} />
           </div>
         ))}
       </div>
 
       <div className="foot">
-        <span className="grow">Source: {card.source.name}{src ? <> &ndash; <a href={src} target="_blank" rel="noopener noreferrer">read the original</a></> : null}</span>
-        <button className="quiet" aria-pressed={isFav} onClick={() => { const on = toggleFav({ url, title: card.headline, source: card.source.name, card }); log("favorite", { url, on }); }}>{isFav ? "Saved" : "Save"}</button>
-        {onShare && <button className="quiet" onClick={onShare}>Share</button>}
+        <div className="row2">
+          <span className="grow">
+            Sources:{" "}
+            {card.sources.map((s, i) => (
+              <span key={s.url}>{i > 0 && " · "}<a href={s.url} target="_blank" rel="noopener noreferrer">{s.name}</a>{s.kind === "primary" ? " (company announcement)" : ""}{!s.approved ? " (unverified)" : ""}</span>
+            ))}
+          </span>
+          {url && <button className="quiet" aria-pressed={isFav} onClick={() => { const on = toggleFav({ url, title: card.headline, source: rep?.name ?? "", card }); log("favorite", { url, on }); }}>{isFav ? "Saved" : "Save"}</button>}
+          {url && <button className="quiet" onClick={async () => { setCopied((await copyShare(url)) ? "Link copied" : "Could not copy"); setTimeout(() => setCopied(""), 2200); }}>{copied || "Share"}</button>}
+        </div>
+        <div className="row2">
+          <span className="grow">{passages} source passages attached. <Link href="/verify">How we check</Link></span>
+          {!reporting && <button className="linkbtn dim" onClick={() => setReporting(true)}>Report a problem</button>}
+        </div>
+        {reporting && <Report card={card} url={url} onDone={() => setReporting(false)} />}
       </div>
     </div>
   );
