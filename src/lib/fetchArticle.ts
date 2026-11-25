@@ -65,8 +65,25 @@ async function readPage(url: string) {
   const html = (await res.text()).slice(0, 3_000_000);
   const { document } = parseHTML(html);
   try { Object.defineProperty(document, "documentURI", { value: res.url || u.toString() }); } catch {}
+  // Readability can cut an article short (for example after a pull quote), so also read the <article> paragraphs directly.
+  let direct = "";
+  try {
+    const root = document.querySelector("article") ?? document.querySelector("[itemprop=articleBody]") ?? document.querySelector("main");
+    if (root) {
+      const parts: string[] = [];
+      root.querySelectorAll("p, blockquote, h2, h3, li").forEach((el: Element) => {
+        if (el.closest("aside, nav, footer, form, figure, [class*=related], [class*=comment], [class*=share], [class*=newsletter]")) return;
+        if (el.tagName === "LI" && el.closest("blockquote")) return;
+        if (el.tagName === "P" && el.closest("blockquote")) return;
+        const t = (el.textContent ?? "").replace(/\s+/g, " ").trim();
+        if (t.length > 20) parts.push(t);
+      });
+      direct = parts.join(" ");
+    }
+  } catch {}
   const parsed = new Readability(document as unknown as Document).parse();
-  const text = (parsed?.textContent ?? "").replace(/\s+/g, " ").trim();
+  const rText = (parsed?.textContent ?? "").replace(/\s+/g, " ").trim();
+  const text = direct.length > rText.length * 1.3 && direct.length > 800 ? direct : rText;
   if (text.length < 800) throw new FetchError("too_short", "Article text too short or paywalled");
   const finalUrl = res.url || u.toString();
   return { finalUrl, title: parsed?.title ?? "", text: text.slice(0, 24000), contentHtml: parsed?.content ?? "" };
