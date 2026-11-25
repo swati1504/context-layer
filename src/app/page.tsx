@@ -209,7 +209,7 @@ export default function Home() {
               {rich ? (
                 <>
                   <p className="summary">{card.summary.text}</p>
-                  <ul className="pts">{card.key_points.slice(0, 3).map((k, i) => <li key={i}>{k.text}</li>)}</ul>
+                  <ul className="pts">{card.key_points.filter((k) => k.text !== card.summary.text).slice(0, 3).map((k, i) => <li key={i}>{k.text}</li>)}</ul>
                   <p className="curious">{card.question}</p>
                 </>
               ) : it.teaser && <p className="teaser">{it.teaser}</p>}

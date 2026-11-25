@@ -106,7 +106,7 @@ h1.hero { font-weight: 800; font-size: clamp(34px, 6vw, 54px); line-height: 1.05
 .row h3 { font-weight: 800; font-size: 22px; line-height: 1.22; margin: 0 0 8px; letter-spacing: -0.02em; }
 .row .summary { margin: 0 0 8px; font-size: 16.5px; }
 .teaser { color: var(--muted); margin: 0 0 14px; font-size: 15.5px; }
-.pts { margin: 0 0 12px; padding-left: 20px; color: var(--text); }
+.pts { margin: 0 0 12px; padding-left: 20px; color: var(--text); list-style: disc; }
 .pts li { margin-bottom: 4px; }
 .pts li::marker { color: var(--accent); }
 .curious { margin: 0 0 14px; color: var(--accent); font-weight: 600; font-size: 15.5px; }

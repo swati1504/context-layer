@@ -38,17 +38,17 @@ export const COMFORT = [
 
 // Interests are what the feed ranks on. Each maps to words that show up in headlines.
 export const INTERESTS: Record<string, string[]> = {
-  "AI at work": ["agent", "copilot", "chatgpt", "workplace", "enterprise", "productivity", "automation", "jobs", "work "],
-  "Privacy": ["privacy", "data", "tracking", "surveillance", "consent", "advertis", "ads "],
-  "Apps I use": ["app ", "apps", "instagram", "tiktok", "youtube", "whatsapp", "iphone", "android", "chatgpt", "gemini", "spotify"],
+  "AI at work": ["agent", "copilot", "chatgpt", "workplace", "enterprise", "productivity", "automation", "jobs"],
+  "Privacy": ["privacy", "tracking", "surveillance", "consent", "advertis"],
+  "Apps I use": ["instagram", "tiktok", "youtube", "whatsapp", "iphone", "android", "chatgpt", "gemini", "spotify"],
   "Big Tech": ["google", "apple", "meta", "amazon", "microsoft", "openai", "nvidia", "anthropic"],
   "Money and business": ["funding", "valuation", "earnings", "revenue", "acquisition", "ipo", "stock", "raises", "billion"],
-  "Chips and hardware": ["chip", "gpu", "nvidia", "hardware", "device", "semiconductor", "satellite", "robot"],
+  "Chips and hardware": ["chip", "gpu", "nvidia", "hardware", "semiconductor", "satellite", "robot"],
   "Kids and school": ["kids", "children", "teen", "student", "school", "education", "teacher"],
-  "Health and science": ["health", "medical", "fda", "patient", "drug", "science", "research", "climate"],
+  "Health and science": ["health", "medical", "fda", "patient", "drug", "science", "climate"],
   "Policy and law": ["regulat", "ftc", "court", "law", "lawsuit", "senate", "ban", "policy", "copyright", "antitrust"],
-  "Creators and media": ["creator", "music", "film", "video", "streaming", "news", "media", "artist", "publisher"],
-  "Startups": ["startup", "founder", "seed", "series a", "raises", "launch"],
+  "Creators and media": ["creator", "music", "film", "streaming", "artist", "publisher"],
+  "Startups": ["startup", "founder", "seed", "series a", "raises", "seed round"],
   "Security": ["security", "hack", "breach", "vulnerab", "malware", "attack", "scam"],
 };
 const ROLE_TO_INTEREST: Record<string, string> = { Marketing: "Creators and media", Finance: "Money and business", Healthcare: "Health and science", Education: "Kids and school", "Legal or policy": "Policy and law", Engineer: "AI at work", Student: "Kids and school" };
