@@ -119,7 +119,7 @@ function WhyItMatters({ card, url }: { card: Card; url: string }) {
       )}
       {profile && !line && !err && <p className="skeleton" style={{ marginTop: 0 }}>Writing this for you…</p>}
       {profile && err && <p className="err" style={{ marginTop: 0 }}>Could not write this right now. Reopen the card to try again.</p>}
-      {profile && line && <div className="why">{line}<small>Written for a {profile.role.toLowerCase()} in {profile.industry.toLowerCase()}. Based only on the verified claims above.</small></div>}
+      {profile && line && <div className="why">{line}<small>Written for your profile ({profile.role}, {profile.industry}). Based only on the verified claims above.</small></div>}
     </div>
   );
 }
