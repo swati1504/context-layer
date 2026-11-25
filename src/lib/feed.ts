@@ -9,7 +9,7 @@ const FEEDS: { source: string; url: string; filter?: RegExp }[] = [
 ];
 
 const strip = (s: string) =>
-  s.replace(/<!\[CDATA\[|\]\]>/g, "").replace(/<[^>]+>/g, " ").replace(/&amp;/g, "&").replace(/&#8217;|&rsquo;/g, "’")
+  s.replace(/<!\[CDATA\[|\]\]>/g, "").replace(/<[^>]+>/g, " ").replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n))).replace(/&amp;/g, "&").replace(/&#8217;|&rsquo;/g, "’")
     .replace(/&#8216;/g, "‘").replace(/&#8220;|&#8221;/g, '"').replace(/&quot;/g, '"').replace(/&#039;|&#39;/g, "'")
     .replace(/&hellip;|&#8230;/g, "…").replace(/\s+/g, " ").trim();
 const tag = (block: string, name: string) => block.match(new RegExp(`<${name}[^>]*>([\\s\\S]*?)</${name}>`, "i"))?.[1] ?? "";

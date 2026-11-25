@@ -4,10 +4,10 @@ import { getCachedCard, saveCard } from "./supabase";
 import { takeBudget } from "./budget";
 import { LimitError } from "./cardService";
 
-const key = (url: string) => "x1:" + url;
+const key = (url: string) => "x2:" + url;
 const mem = new Map<string, Explainer>();
 const inflight = new Map<string, Promise<Explainer>>();
-const isX = (c: unknown): c is Explainer => (c as { rev?: number } | null)?.rev === 1 && Array.isArray((c as Explainer).sections);
+const isX = (c: unknown): c is Explainer => (c as { rev?: number } | null)?.rev === 2 && Array.isArray((c as Explainer).sections);
 
 export async function lookupExplainer(url: string): Promise<Explainer | null> {
   const m = mem.get(url);
