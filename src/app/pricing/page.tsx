@@ -45,7 +45,7 @@ export default function Pricing() {
             <li className="soon"><span className="chip">Planned</span>Plus for everyone in the group</li>
             <li className="soon"><span className="chip">Planned</span>help getting started</li>
           </ul>
-          <Link className="btn sec-btn plan-cta" href="/verify">See how it works</Link>
+          <Link className="btn sec-btn plan-cta" href="/">See how it works</Link>
         </section>
       </div>
       <p className="plans-note">Plus is not open yet. This page shows the planned plans for our Product Studio demo, and the upgrade screen is a simulation.</p>

@@ -1,5 +1,4 @@
 "use client";
-import Link from "next/link";
 import { useState } from "react";
 import { copyShare, log, markReported, pid, toggleFav, useFavs } from "@/lib/store";
 
@@ -233,7 +232,7 @@ export default function ContextCard({ card, url, inline = false, extra }: { card
           {url && <button className="quiet" onClick={async () => { setCopied((await copyShare(url)) ? "Link copied" : "Could not copy"); setTimeout(() => setCopied(""), 2200); }}>{copied || "Share"}</button>}
         </div>
         <div className="row2">
-          <span className="grow">{passages} source passages attached. <Link href="/verify">How we check</Link></span>
+          <span className="grow">{passages} source passages attached.</span>
           {!reporting && <button className="linkbtn dim" onClick={() => setReporting(true)}>Report a problem</button>}
         </div>
         {reporting && <Report card={card} url={url} onDone={() => setReporting(false)} />}
