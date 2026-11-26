@@ -39,12 +39,12 @@ function whyOf(it: Item, personal: string | undefined, saved: string[]): { reaso
 }
 const normalize = (s: string) => (/^https?:\/\//i.test(s) ? s : `https://${s}`);
 
-async function fetchCard(body: object): Promise<{ card?: Card; cached?: boolean; error?: string; code?: string }> {
+async function fetchCard(body: object): Promise<{ card?: Card; cached?: boolean; error?: string; code?: string; matched?: string }> {
   try {
     const r = await fetch("/api/card", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
     const j = await r.json();
-    if (!r.ok) return { code: j.error, error: MESSAGES[j.error] ?? "Something went wrong building the card. Try again." };
-    return { card: j.card, cached: !!j.cached };
+    if (!r.ok) return { code: j.error, error: MESSAGES[j.error] ?? j.message ?? "Something went wrong building the card. Try again." };
+    return { card: j.card, cached: !!j.cached, matched: j.matched };
   } catch { return { error: "Something went wrong building the card. Try again." }; }
 }
 
@@ -174,7 +174,7 @@ export default function Home() {
     const t0 = Date.now();
     const r = text ? await fetchCard({ text, source, title: source === "screenshot" ? "Your screenshot" : raw ? new URL(url || "https://x").hostname : "Pasted text" }) : await fetchCard({ url });
     if (!r.card) { log("card_error", { url, code: r.code }); setPslot({ status: "error", error: r.error, code: r.code }); return; }
-    if (!r.cached) { markUsed(url || "text:" + Date.now()); setUsed(usedCards().length); }
+    if (!r.cached) { markUsed(r.matched || url || "text:" + Date.now()); setUsed(usedCards().length); }
     log("card_generated", { url, ms: Date.now() - t0, verified: r.card.verification.verified, total: r.card.verification.total, cached: !!r.cached });
     setPslot({ status: "done", card: r.card });
     remember(r.card);
@@ -211,7 +211,7 @@ export default function Home() {
       if (!r.ok || !j.text) { setPslot({ status: "error", error: j.error === "not_article" ? "That looks like a list of headlines or search results, not one article. Open the article and screenshot its text (a few paragraphs), then upload that." : j.error === "no_text" ? "We could not find article text in that image. Try a clearer screenshot of the article itself." : j.error === "limit" ? MESSAGES.limit : "Could not read that image. Try again or paste the link." }); return; }
       setPurl("");
       const n = String(j.text).replace(/\s+/g, " ").length;
-      if (n < 400) { setPslot({ status: "error", error: `We could only read ${n} characters in that image. Screenshot the article text itself (at least a few paragraphs) and try again.` }); return; }
+      if (n < 15) { setPslot({ status: "error", error: "We could not read a headline in that image. Try a clearer screenshot." }); return; }
       await submitPaste(j.text, "screenshot");
     } catch { setPslot({ status: "error", error: "Could not read that image. Try again or paste the link." }); } finally { setShotBusy(false); if (fileRef.current) fileRef.current.value = ""; }
   }
