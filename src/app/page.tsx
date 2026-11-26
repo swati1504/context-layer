@@ -5,7 +5,7 @@ import Trending from "@/components/Trending";
 import ContextCard, { TermText, factsOf, readTime, type Card } from "@/components/ContextCard";
 import Explainable from "@/components/Explainable";
 import StoryImage from "@/components/StoryImage";
-import { ShareIcon, WhyThis } from "@/components/FeedBits";
+import { WhyThis } from "@/components/FeedBits";
 import { addHistory, openProfile, rankReason, readHistory, useProfile } from "@/lib/profile";
 import { FREE_LIMIT, atLimit, isStudy, log, markUsed, useFavs, usedCards } from "@/lib/store";
 
@@ -304,7 +304,6 @@ export default function Home() {
                   </button>
                   {!study && <span className="actspacer" />}
                   {!study && (() => { const w = whyOf(it, it.reason, savedTags); return w ? <WhyThis reason={w.reason} explain={w.explain} /> : null; })()}
-                  {!study && <ShareIcon url={it.url} title={card?.headline ?? it.title} />}
                   {study && !slot && !isOpen && <button className="quiet" onClick={() => { log("skip_click", { url: it.url, familiarity: fam[it.url] ?? null }); setStages((s) => ({ ...s, [it.url]: "skipped" })); }}>Continue without context</button>}
                 </div>
               )}

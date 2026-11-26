@@ -6,7 +6,7 @@ import type { Photo } from "@/lib/photo";
 const cache = new Map<string, Photo | null>();
 
 // A topic photo for a story. Falls back to a quiet block with the topic name when no photo is available.
-export default function StoryImage({ seed, text, topics, size = "card", credit = true }: { seed: string; text: string; topics?: string[]; size?: "card" | "hero" | "thumb"; credit?: boolean }) {
+export default function StoryImage({ seed, text, topics, size = "feed", credit = true }: { seed: string; text: string; topics?: string[]; size?: "feed" | "hero" | "thumb"; credit?: boolean }) {
   const topic = (topics && topics[0]) || classify(text)[0] || "general";
   const k = topic + "|" + seed;
   const [p, setP] = useState<Photo | null | undefined>(cache.get(k));

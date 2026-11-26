@@ -17,10 +17,13 @@ export default function Related({ url, title, tags }: { url: string; title: stri
   return (
     <section className="related" aria-label="Related stories">
       <h2>{kind === "more" ? "More tech news" : "Related"}</h2>
-      <ul>
+      <ul className="relgrid">
         {items.map((r) => (
           <li key={r.url}>
-            <div className="rel-thumb"><StoryImage size="thumb" seed={r.url} text={r.title} credit={false} /></div><Link href={`/story?u=${encodeURIComponent(r.url)}`} onClick={() => log("related_click", { from: url, to: r.url })}>{r.title}</Link>
+            <Link href={`/story?u=${encodeURIComponent(r.url)}`} onClick={() => log("related_click", { from: url, to: r.url })}>
+              <StoryImage seed={r.url} text={r.title} credit={false} />
+              <span className="reltitle">{r.title}</span>
+            </Link>
           </li>
         ))}
       </ul>
