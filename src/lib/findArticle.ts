@@ -17,7 +17,8 @@ function overlap(a: string, b: string) {
 export function headlineOf(text: string): string {
   const first = text.split(/\n+/).map((l) => l.replace(/^(title|headline)\s*:\s*/i, "").trim()).find((l) => l.length > 12) ?? "";
   const h = first.length > 220 ? (first.match(/^.{20,220}?[.!?](\s|$)/)?.[0] ?? first.slice(0, 200)) : first;
-  return h.trim();
+  // Google News and search results append the outlet, for example "Headline - Reuters".
+  return h.replace(/\s+[-–—|]\s+[^-–—|]{2,40}$/, "").trim();
 }
 
 const strip = (s: string) => s.replace(/<!\[CDATA\[|\]\]>/g, "").replace(/<[^>]+>/g, " ").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/\s+/g, " ").trim();

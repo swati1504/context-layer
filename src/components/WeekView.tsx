@@ -34,7 +34,7 @@ export default function WeekView() {
         const s2 = n; n += it.affects.length;
         return (
           <article className="row" key={it.url}>
-            <div style={{ marginBottom: 16 }}><StoryImage seed={it.url} text={it.headline + " " + it.changed.map((c) => c.text).join(" ")} /></div>
+            <div style={{ marginBottom: 16, maxWidth: 440 }}><StoryImage seed={it.url} text={it.headline + " " + it.changed.map((c) => c.text).join(" ")} /></div>
             <h2 className="wk-title">{it.headline}</h2>
             <h3 className="wk-h">What changed</h3>
             <Cited claims={it.changed} card={card} start={s1} />

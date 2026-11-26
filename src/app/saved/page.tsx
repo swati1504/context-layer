@@ -26,7 +26,7 @@ export default function Saved() {
           <article className="srow savedrow" key={f.url}>
             <div className="saved-img"><StoryImage size="thumb" seed={f.url} text={f.title + " " + (f.card?.v === 2 ? f.card.summary.text : "")} credit={false} /></div>
             <div>
-            <div className="meta"><span>{f.source}</span><span className="dot">·</span><span>Saved {new Date(f.savedAt).toLocaleDateString()}</span></div>
+            <div className="meta"><span>{f.source}</span><span className="dot">·</span><span>Saved {new Date(f.savedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span></div>
             <h3>{f.card?.v === 2 ? f.card.headline : f.title}</h3>
             {f.card?.v === 2 && <p>{f.card.summary.text}</p>}
             <div className="actions">

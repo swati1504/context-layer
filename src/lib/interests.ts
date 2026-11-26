@@ -4,7 +4,7 @@ export const INTERESTS: Record<string, string[]> = {
   "Privacy": ["privacy", "tracking", "surveillance", "consent", "advertis", "data collection", "facial recognition", "personal data"],
   "Apps I use": ["instagram", "tiktok", "youtube", "whatsapp", "iphone", "android", "chatgpt", "gemini", "spotify", "snapchat", "facebook", "reddit", "x.com", "app store", "netflix", "uber", "airbnb"],
   "Big Tech": ["google", "apple", "meta", "amazon", "microsoft", "openai", "nvidia", "anthropic", "tesla", "alphabet", "samsung"],
-  "Money and business": ["funding", "valuation", "earnings", "revenue", "acquisition", "acquire", "ipo", "stock", "raises", "billion", "fintech", "payment", "bank", "crypto", "bitcoin", "stablecoin", "invest", "profit", "merger", "market cap", "wall street"],
+  "Money and business": ["funding", "valuation", "earnings", "revenue", "acquisition", "acquire", "ipo", "stock market", "shares", "raises", "fintech", "payment", "bank", "crypto", "bitcoin", "stablecoin", "invest", "profit", "merger", "market cap", "wall street"],
   "Chips and hardware": ["chip", "gpu", "hardware", "semiconductor", "satellite", "robot", "processor", "data center", "datacenter", "device", "wearable", "battery", "laptop", "headset"],
   "Kids and school": ["kids", "children", "child", "teen", "student", "school", "education", "teacher", "classroom", "college", "parents", "minors"],
   "Health and medicine": ["health", "medical", "fda", "patient", "drug", "hospital", "doctor", "clinical", "biotech", "medicine", "therapy", "mental health", "healthcare", "genome", "cancer", "vaccine", "pharma", "disease", "nurse", "surgery", "wellness", "peptide"],
