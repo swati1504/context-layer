@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import ContextCard, { factsOf, type Card } from "@/components/ContextCard";
 import Explainable from "@/components/Explainable";
 import Explainer from "@/components/Explainer";
+import { ShareIcon } from "@/components/FeedBits";
 import Related from "@/components/Related";
 import Discussion from "@/components/Discussion";
 import { addHistory } from "@/lib/profile";
@@ -35,7 +36,10 @@ export default function Story() {
   }, []);
   return (
     <main className="narrow" style={{ paddingTop: 36 }}>
-      <p className="fine" style={{ margin: "0 0 16px" }}><Link href="/">← Back to today’s tech news</Link></p>
+      <div className="storytop">
+        <p className="fine" style={{ margin: 0 }}><Link href="/">← Back to today’s tech news</Link></p>
+        {state.s === "done" && state.card && <ShareIcon url={url} title={state.card.headline} label="Share this story" />}
+      </div>
       {state.s === "load" && <p className="skeleton" role="status">Reading the article and checking every quote. This takes about 15 seconds.</p>}
       {state.s === "err" && <p className="err" role="alert">{state.msg} <Link href="/">Go to the feed</Link></p>}
       {state.s === "done" && state.card && (

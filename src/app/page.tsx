@@ -2,10 +2,11 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Trending from "@/components/Trending";
-import ContextCard, { Evidence, TermText, factsOf, readTime, type Card } from "@/components/ContextCard";
+import ContextCard, { TermText, factsOf, readTime, type Card } from "@/components/ContextCard";
 import Explainable from "@/components/Explainable";
+import { Clipping, ShareIcon, WhyThis } from "@/components/FeedBits";
 import { addHistory, openProfile, rankReason, readHistory, useProfile } from "@/lib/profile";
-import { FREE_LIMIT, atLimit, isStudy, log, markUsed, usedCards } from "@/lib/store";
+import { FREE_LIMIT, atLimit, isStudy, log, markUsed, useFavs, usedCards } from "@/lib/store";
 
 type Item = { title: string; url: string; source: string; teaser: string; published: string; also: { source: string; url: string }[]; card: Card | null };
 type Slot = { status: "loading" | "done" | "error"; card?: Card; error?: string; code?: string };
@@ -23,6 +24,17 @@ function ago(s: string) {
   if (!t) return "";
   const h = Math.max(0, Math.round((Date.now() - t) / 36e5));
   return h < 1 ? "just now" : h < 24 ? `${h}h ago` : `${Math.round(h / 24)}d ago`;
+}
+const WHY_RULES = "Stories are ordered by simple rules: the interests you picked, stories you read or saved, how many outlets cover it, and how new it is. No hidden profile.";
+function whyOf(it: Item, personal: string | undefined, saved: string[]): { reason: string; explain: string } | null {
+  if (personal) return { reason: personal, explain: `${personal}. ${WHY_RULES}` };
+  const tags = (it.card?.tags ?? []).map((t) => t.toLowerCase());
+  const s = saved.find((t) => tags.includes(t));
+  if (s) return { reason: `Like stories you saved`, explain: `You saved a story tagged “${s}”, and this one shares that tag. ${WHY_RULES}` };
+  if (it.also.length > 0) return { reason: `Covered by ${it.also.length + 1} outlets`, explain: `Several outlets reported this story, which moves it up. ${WHY_RULES}` };
+  const h = it.published ? (Date.now() - +new Date(it.published)) / 36e5 : 99;
+  if (h < 24) return { reason: "New today", explain: `It was published in the last day. ${WHY_RULES}` };
+  return null;
 }
 const normalize = (s: string) => (/^https?:\/\//i.test(s) ? s : `https://${s}`);
 
@@ -63,6 +75,7 @@ function LimitModal({ onClose }: { onClose: () => void }) {
 
 export default function Home() {
   const profile = useProfile();
+  const favs = useFavs();
   const [study, setStudy] = useState(false);
   const [items, setItems] = useState<Item[] | null>(null);
   const [slots, setSlots] = useState<Record<string, Slot>>({});
@@ -80,7 +93,12 @@ export default function Home() {
   const result = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    setStudy(isStudy());
+    const st = isStudy();
+    setStudy(st);
+    try {
+      const q = new URLSearchParams(window.location.search);
+      if (!st && !q.get("u") && !q.get("home") && !localStorage.getItem("cl_seen")) { window.location.replace("/welcome"); return; }
+    } catch {}
     setUsed(usedCards().length);
     setHist(readHistory());
     fetch("/api/feed").then((r) => r.json()).then((j) => setItems(j.items ?? [])).catch(() => setItems([]));
@@ -96,6 +114,7 @@ export default function Home() {
     return (study ? base.slice(0, 6) : base).map((b) => ({ ...b.it, reason: personal && b.score > 0 ? b.reason : undefined }));
   }, [items, profile, hist, personal, study]);
 
+  const savedTags = useMemo(() => favs.flatMap((f) => (f.card?.tags ?? []).map((t: string) => t.toLowerCase())), [favs]);
   const cardOf = (it: Item) => slots[it.url]?.card ?? it.card ?? undefined;
 
   function remember(card: Card) { addHistory(card.tags); setHist(readHistory()); }
@@ -205,17 +224,23 @@ export default function Home() {
               <div className="meta">
                 {it.published && <span>{ago(it.published)}</span>}
                 {card && !study && <>{it.published && <span className="dot">·</span>}<span>{readTime(card.read_seconds)}</span></>}
-                {it.reason && <span className="reason">{it.reason}</span>}
+                {study && it.reason && <span className="reason">{it.reason}</span>}
               </div>
-              <h3>{rich ? card.headline : it.title}</h3>
               {rich ? (
+                <div className="rowgrid">
+                  <div className="rowmain">
+                    <h3>{card.headline}</h3>
+                    <p className="summary clamp"><TermText text={card.summary.text} jargon={card.jargon} url={it.url} /></p>
+                    {card.tags.length > 0 && <ul className="tags" aria-label="Topics">{card.tags.slice(0, 3).map((t) => <li key={t}>{t}</li>)}</ul>}
+                  </div>
+                  <Clipping quote={card.summary.quote} />
+                </div>
+              ) : (
                 <>
-                  <p className="summary"><TermText text={card.summary.text} jargon={card.jargon} url={it.url} /></p>
-                  <ul className="pts">{card.key_points.filter((k) => k.text !== card.summary.text).slice(0, 3).map((k, i) => <li key={i}>{k.text}</li>)}</ul>
-                  <Evidence card={card} url={it.url} />
-                  <button className="curious" onClick={() => toggleRow(it)} aria-expanded={isOpen}>{card.question}</button>
+                  <h3>{it.title}</h3>
+                  {it.teaser && <p className="teaser">{it.teaser}</p>}
                 </>
-              ) : it.teaser && <p className="teaser">{it.teaser}</p>}
+              )}
 
               {study && stage === "ask" && (
                 <div className="ask" role="group" aria-label="How well do you understand this story?">
@@ -230,9 +255,12 @@ export default function Home() {
               {(!study || stage === "choose") && (
                 <div className="actions">
                   {rich && <Link className="btn" href={`/story?u=${encodeURIComponent(it.url)}`}>Read the story</Link>}
-                  <button className={rich ? "ghost" : "ghost"} aria-expanded={isOpen} disabled={slot?.status === "loading"} onClick={() => toggleRow(it)}>
+                  <button className="ghost" aria-expanded={isOpen} disabled={slot?.status === "loading"} onClick={() => toggleRow(it)}>
                     {slot?.status === "loading" ? "Reading…" : isOpen ? "Hide context" : rich ? "Quick context" : "Get context"}
                   </button>
+                  {rich && <span className="actspacer" />}
+                  {rich && (() => { const w = whyOf(it, it.reason, savedTags); return w ? <WhyThis reason={w.reason} explain={w.explain} /> : null; })()}
+                  {rich && <ShareIcon url={it.url} title={card.headline} />}
                   {study && !slot && !isOpen && <button className="quiet" onClick={() => { log("skip_click", { url: it.url, familiarity: fam[it.url] ?? null }); setStages((s) => ({ ...s, [it.url]: "skipped" })); }}>Continue without context</button>}
                 </div>
               )}

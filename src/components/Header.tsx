@@ -11,6 +11,7 @@ const LINKS = [
   { href: "/community", label: "Community" },
   { href: "/saved", label: "Saved" },
   { href: "/pricing", label: "Pricing" },
+  { href: "/welcome", label: "About" },
 ];
 
 function Logo() {
