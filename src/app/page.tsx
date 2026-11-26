@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Trending from "@/components/Trending";
 import ContextCard, { TermText, factsOf, readTime, type Card } from "@/components/ContextCard";
@@ -92,6 +93,9 @@ export default function Home() {
   const [hist, setHist] = useState<string[]>([]);
   const [view, setView] = useState<"you" | "all">("you");
   const result = useRef<HTMLElement>(null);
+  const router = useRouter();
+  const [drag, setDrag] = useState(false);
+  const shotRef = useRef<(f: File | undefined) => void>(() => {});
 
   useEffect(() => {
     const st = isStudy();
@@ -176,8 +180,14 @@ export default function Home() {
     if (!r.card) { log("card_error", { url, code: r.code }); setPslot({ status: "error", error: r.error, code: r.code }); return; }
     if (!r.cached) { markUsed(r.matched || url || "text:" + Date.now()); setUsed(usedCards().length); }
     log("card_generated", { url, ms: Date.now() - t0, verified: r.card.verification.verified, total: r.card.verification.total, cached: !!r.cached });
-    setPslot({ status: "done", card: r.card });
     remember(r.card);
+    if (!isStudy()) {
+      // Open the result on its own page, with a link back to today's news.
+      const dest = r.matched || url;
+      if (dest) { router.push(`/story?u=${encodeURIComponent(dest)}`); return; }
+      try { const id = Date.now().toString(36); sessionStorage.setItem("cl_local_" + id, JSON.stringify(r.card)); router.push(`/story?c=${id}`); return; } catch {}
+    }
+    setPslot({ status: "done", card: r.card });
     setTimeout(() => { result.current?.scrollIntoView({ behavior: "smooth", block: "start" }); result.current?.focus(); }, 50);
   }
 
@@ -222,6 +232,24 @@ export default function Home() {
     setFam((f) => ({ ...f, [url]: a }));
   }
 
+  shotRef.current = onShot;
+  useEffect(() => {
+    if (study) return;
+    const isImg = (f?: File | null) => !!f && /^image\/(png|jpeg|webp)$/.test(f.type);
+    const over = (e: DragEvent) => { if (e.dataTransfer?.types?.includes("Files")) { e.preventDefault(); setDrag(true); } };
+    const leave = (e: DragEvent) => { if (!e.relatedTarget) setDrag(false); };
+    const drop = (e: DragEvent) => {
+      setDrag(false);
+      if (!e.dataTransfer?.files?.length) return;
+      e.preventDefault();
+      const f = [...e.dataTransfer.files].find(isImg);
+      if (f) shotRef.current(f); else setPslot({ status: "error", error: "That file is not a PNG, JPG or WebP image." });
+    };
+    const pasteImg = (e: ClipboardEvent) => { const f = [...(e.clipboardData?.files ?? [])].find(isImg); if (f) { e.preventDefault(); shotRef.current(f); } };
+    window.addEventListener("dragover", over); window.addEventListener("dragleave", leave); window.addEventListener("drop", drop); window.addEventListener("paste", pasteImg);
+    return () => { window.removeEventListener("dragover", over); window.removeEventListener("dragleave", leave); window.removeEventListener("drop", drop); window.removeEventListener("paste", pasteImg); };
+  }, [study]);
+
   const loadingPaste = pslot?.status === "loading";
   return (
     <div className="layout">
@@ -241,10 +269,11 @@ export default function Home() {
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="2" y="3" width="14" height="12" rx="2" /><circle cx="6.5" cy="7.5" r="1.3" /><path d="M2.5 13l4-3.5 3 2.5 2.5-2 3.5 3" /></svg>
             {shotBusy ? "Reading your screenshot…" : "Upload a screenshot"}
           </button>
-          <span className="fine">Of the article text, instead of a link. Not independently checked.</span>
+          <span className="fine">or drop or paste (⌘V) a screenshot anywhere on this page. Matched to the real article when we can find it.</span>
           <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(e) => onShot(e.target.files?.[0])} />
         </div>
       )}
+      {drag && <div className="dropveil" role="status"><div>Drop your screenshot to explain it</div></div>}
       <div className="bar">
         <span>Works with any public article. Outlets are labeled On our source list or Outside our source list.</span>
         {!study && <><span className="sep">|</span><span>{Math.min(used, FREE_LIMIT)} of {FREE_LIMIT} free links used this month. Feed stories are free. <Link href="/pricing">Plus is coming soon</Link></span></>}

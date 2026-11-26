@@ -19,10 +19,20 @@ const MSG: Record<string, string> = {
 };
 
 export default function Story() {
-  const [state, setState] = useState<{ s: "load" | "done" | "err"; card?: Card; msg?: string }>({ s: "load" });
+  const [state, setState] = useState<{ s: "load" | "done" | "err"; card?: Card; msg?: string; local?: boolean }>({ s: "load" });
   const [url, setUrl] = useState("");
   useEffect(() => {
-    const u = new URLSearchParams(window.location.search).get("u") ?? "";
+    const q = new URLSearchParams(window.location.search);
+    const local = q.get("c");
+    if (local) {
+      try {
+        const card = JSON.parse(sessionStorage.getItem("cl_local_" + local) ?? "null");
+        if (card) { addHistory(card.tags); setState({ s: "done", card, local: true }); return; }
+      } catch {}
+      setState({ s: "err", msg: "That result is no longer available in this tab. Upload the screenshot again." });
+      return;
+    }
+    const u = q.get("u") ?? "";
     setUrl(u);
     if (!u) { setState({ s: "err", msg: "No story link was given." }); return; }
     log("get_context_click", { url: u, via: "share" });
@@ -38,19 +48,19 @@ export default function Story() {
   return (
     <main className="narrow" style={{ paddingTop: 36 }}>
       <div className="storytop">
-        <p className="fine" style={{ margin: 0 }}><Link href="/">← Back to today’s tech news</Link></p>
-        {state.s === "done" && state.card && <ShareIcon url={url} title={state.card.headline} label="Share this story" />}
+        <p className="fine" style={{ margin: 0 }}><Link href="/">← Back to today’s news</Link></p>
+        {state.s === "done" && state.card && !state.local && <ShareIcon url={url} title={state.card.headline} label="Share this story" />}
       </div>
       {state.s === "load" && <p className="skeleton" role="status">Reading the article and checking every quote. This takes about 15 seconds.</p>}
       {state.s === "err" && <p className="err" role="alert">{state.msg} <Link href="/">Go to the feed</Link></p>}
-      {state.s === "done" && state.card && <div style={{ marginBottom: 20 }}><StoryImage size="hero" seed={url} text={state.card.headline + " " + state.card.summary.text} /></div>}
+      {state.s === "done" && state.card && !state.local && <div style={{ marginBottom: 20 }}><StoryImage size="hero" seed={url} text={state.card.headline + " " + state.card.summary.text} /></div>}
       {state.s === "done" && state.card && (
         <Explainable facts={factsOf(state.card)} headline={state.card.headline} url={url}>
-          <ContextCard card={state.card} url={url} extra={<Explainer url={url} card={state.card} />} />
+          <ContextCard card={state.card} url={url} extra={state.local ? undefined : <Explainer url={url} card={state.card} />} />
         </Explainable>
       )}
-      {state.s === "done" && state.card && <Discussion url={url} title={state.card.headline} />}
-      {state.s === "done" && state.card && <Related url={url} title={state.card.publisher_headline} tags={state.card.tags} />}
+      {state.s === "done" && state.card && !state.local && <Discussion url={url} title={state.card.headline} />}
+      {state.s === "done" && state.card && !state.local && <Related url={url} title={state.card.publisher_headline} tags={state.card.tags} />}
     </main>
   );
 }

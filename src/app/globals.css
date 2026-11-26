@@ -421,3 +421,6 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
 
 .shotrow { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 16px; margin: 12px 0 0; }
 .shotbtn { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; font-size: 15px; }
+
+.dropveil { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; background: color-mix(in srgb, var(--bg) 82%, transparent); pointer-events: none; }
+.dropveil > div { border: 2px dashed var(--ink); border-radius: 16px; padding: 40px 56px; background: var(--panel); font-family: var(--font-serif), Georgia, serif; font-size: 24px; color: var(--text); }
