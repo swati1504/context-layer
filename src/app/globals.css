@@ -410,3 +410,11 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
 .card h1.story { margin-bottom: 12px; }
 .sec.assist { border-top: 0; padding: 20px; }
 .sec.assist h5 { font-family: inherit; font-size: 17px; font-weight: 600; margin-bottom: 8px; }
+
+/* the quick context opened inside a feed row stays compact */
+.row .card { margin-top: 16px; padding: 16px 20px; }
+.row .sec { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line); }
+.row .sec:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
+.row .sec h5 { font-family: inherit; font-size: 15px; font-weight: 600; margin: 0 0 8px; letter-spacing: 0; }
+.row .claim { margin-bottom: 12px; }
+.row .claim:last-child { margin-bottom: 0; }
