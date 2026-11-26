@@ -15,10 +15,10 @@ const LINKS = [
 
 function Logo() {
   return (
-    <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true">
-      <rect x="2" y="13" width="20" height="9" rx="3" fill="var(--accent)" opacity="0.4" />
-      <rect x="4" y="5" width="20" height="10" rx="3" fill="var(--accent)" />
-      <rect x="7" y="9" width="9" height="2" rx="1" fill="var(--accent-ink)" opacity="0.8" />
+    <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
+      <rect x="1" y="1" width="20" height="20" rx="5" fill="var(--ink)" />
+      <rect x="5" y="12" width="12" height="4" rx="1" fill="var(--mark)" />
+      <rect x="5" y="6.5" width="9" height="1.5" rx="0.75" fill="var(--ink-fg)" />
     </svg>
   );
 }
