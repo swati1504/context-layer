@@ -258,3 +258,24 @@ table.t th { color: var(--muted); font-weight: 500; }
 a.btn { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; min-height: 40px; padding: 0 18px; font-size: 14.5px; }
 .actions .btn + .ghost { background: transparent; color: var(--text); border: 1px solid var(--line); font-weight: 500; }
 .actions .btn + .ghost[aria-expanded="true"] { background: var(--accent-bg); color: var(--accent); border-color: var(--accent); }
+
+/* Home layout with trending sidebar */
+.layout { max-width: 780px; margin: 0 auto; padding: 0 16px; }
+.layout .shell { padding: 0 0 48px; max-width: none; }
+.trend { margin: 0 0 96px; padding-top: 8px; }
+.trend h2 { font-weight: 800; font-size: 18px; margin: 0 0 4px; }
+.trend ol { list-style: none; margin: 14px 0 0; padding: 0; counter-reset: t; }
+.trend li { padding: 12px 0; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 3px; }
+.trend li a { font-weight: 600; font-size: 15px; line-height: 1.35; text-decoration: none; color: var(--text); }
+.trend li a:hover { text-decoration: underline; }
+@media (min-width: 1100px) {
+  .layout { max-width: 1160px; display: grid; grid-template-columns: minmax(0, 780px) 320px; gap: 48px; align-items: start; }
+  .trend { position: sticky; top: 84px; margin: 44px 0 0; max-height: calc(100vh - 110px); overflow: auto; }
+}
+.related { margin: 40px 0 0; padding-top: 20px; border-top: 2px solid var(--text); }
+.related h2 { font-weight: 800; font-size: 18px; margin: 0 0 8px; }
+.related ul { list-style: none; margin: 0; padding: 0; }
+.related li { padding: 12px 0; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 3px; }
+.related li:first-child { border-top: 0; }
+.related li a { font-weight: 600; font-size: 16px; line-height: 1.35; text-decoration: none; color: var(--text); }
+.related li a:hover { text-decoration: underline; }

@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
+import Trending from "@/components/Trending";
 import ContextCard, { Evidence, TermText, factsOf, readTime, type Card } from "@/components/ContextCard";
 import Explainable from "@/components/Explainable";
 import { addHistory, openProfile, rankReason, readHistory, useProfile } from "@/lib/profile";
@@ -143,6 +144,7 @@ export default function Home() {
 
   const loadingPaste = pslot?.status === "loading";
   return (
+    <div className="layout">
     <main className="shell">
       <h1 className="hero">Understand the story, not just the headline.</h1>
       <p className="lede">Tech news in plain words. Highlight anything that confuses you to get more context, and every claim links to where it came from.</p>
@@ -252,5 +254,7 @@ export default function Home() {
       </div>
       {limit && <LimitModal onClose={() => setLimit(false)} />}
     </main>
+    {!study && <Trending />}
+    </div>
   );
 }

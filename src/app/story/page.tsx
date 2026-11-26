@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import ContextCard, { factsOf, type Card } from "@/components/ContextCard";
 import Explainable from "@/components/Explainable";
 import Explainer from "@/components/Explainer";
+import Related from "@/components/Related";
 import { addHistory } from "@/lib/profile";
 import { log } from "@/lib/store";
 
@@ -41,6 +42,7 @@ export default function Story() {
           <ContextCard card={state.card} url={url} extra={<Explainer url={url} card={state.card} />} />
         </Explainable>
       )}
+      {state.s === "done" && state.card && <Related url={url} title={state.card.publisher_headline} tags={state.card.tags} />}
     </main>
   );
 }
