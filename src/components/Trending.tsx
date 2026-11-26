@@ -15,6 +15,7 @@ export default function Trending() {
   if (items && items.length === 0) return null;
   return (
     <aside className="trend" aria-label="Trending in tech news">
+      <Link className="weekcard" href="/week"><strong>This week in tech</strong><span>Three changes and who they affect</span></Link>
       <h2>Trending in tech news</h2>
       <p className="fine">Each outlet&rsquo;s own most-read list, right now.</p>
       {items === null && <p className="empty">Loading…</p>}

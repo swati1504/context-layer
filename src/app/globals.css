@@ -295,3 +295,7 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
 .disc-new { margin: 16px 0 0; }
 .disc-new select { font: inherit; font-size: 15px; width: 100%; box-sizing: border-box; padding: 9px 12px; margin-top: 4px; border-radius: 10px; border: 1px solid var(--line); background: transparent; color: inherit; }
 .disc-new select option { color: #111; }
+.wk-h { font-weight: 700; font-size: 14px; margin: 14px 0 4px; color: var(--muted, #8a8fa3); }
+.weekcard { display: flex; flex-direction: column; gap: 2px; padding: 14px 16px; margin: 0 0 24px; border-radius: 14px; background: var(--accent-bg); color: var(--text); text-decoration: none; }
+.weekcard strong { font-size: 16px; }
+.weekcard span { font-size: 13.5px; opacity: 0.8; }

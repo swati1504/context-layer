@@ -17,7 +17,7 @@ function srcFor(card: Card, c: Claim) {
 }
 
 // Sentences read as a paragraph; each one ends with a numbered link to the passage it comes from.
-function Cited({ claims, card, start }: { claims: Claim[]; card: Card; start: number }) {
+export function Cited({ claims, card, start }: { claims: Claim[]; card: Card; start: number }) {
   return (
     <p className="cited">
       {claims.map((c, i) => {

@@ -7,6 +7,7 @@ import { isStudy, log, pid } from "@/lib/store";
 
 const LINKS = [
   { href: "/", label: "Feed" },
+  { href: "/week", label: "This week" },
   { href: "/community", label: "Community" },
   { href: "/saved", label: "Saved" },
   { href: "/verify", label: "How we verify" },
