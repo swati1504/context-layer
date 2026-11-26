@@ -19,7 +19,7 @@ export default function Pricing() {
             <li>5 pasted links a month, plus every story in the feed</li>
             <li>Source passages attached to every claim</li>
             <li>A feed ranked by your interests, with reasons</li>
-            <li>Ask follow-up questions on any story</li>
+            <li>3 follow-up questions per story</li>
             <li>Highlight any text for a plain explanation</li>
             <li>Save stories in this browser</li>
           </ul>
@@ -31,6 +31,7 @@ export default function Pricing() {
           <small className="plan-sub">or $39 a year</small>
           <ul>
             <li>Unlimited pasted links</li>
+            <li>5 follow-up questions per story</li>
             <li className="soon"><span className="chip">Planned</span>follow companies and topics</li>
             <li className="soon"><span className="chip">Planned</span>daily digest of what you follow</li>
             <li className="soon"><span className="chip">Planned</span>saved history synced across devices</li>

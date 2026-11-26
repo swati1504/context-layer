@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { fragmentUrl, type Card, type Claim } from "@/components/ContextCard";
 import { log } from "@/lib/store";
@@ -8,7 +9,7 @@ type Faq = { question: string; answers: Claim[]; answered: boolean };
 type Ex = { sections: Section[]; faq: Faq[] };
 type Qa = { q: string; state: "load" | "done" | "err"; answered?: boolean; parts?: Claim[]; background?: string | null; msg?: string };
 
-const LIMIT = 5;
+const LIMIT = 3; // free plan; Plus is planned to allow 5 per story
 const BG = "General background · separate from the reporting.";
 
 function srcFor(card: Card, c: Claim) {
@@ -83,7 +84,7 @@ function Assistant({ url, card, suggestions }: { url: string; card: Card; sugges
           <input aria-label="Your question about this story" placeholder="Does this affect me?" value={q} maxLength={300} onChange={(e) => setQ(e.target.value)} />
           <button className="btn" disabled={q.trim().length < 3}>Ask</button>
         </form>
-      ) : <p className="fine">You have used all {LIMIT} questions for this story.</p>}
+      ) : <p className="fine">You have used your {LIMIT} free questions on this story. <Link href="/pricing">Plus is planned to allow 5 per story.</Link></p>}
       {left > 0 && <p className="fine" style={{ margin: "8px 0 0" }}>{left} of {LIMIT} questions left for this story.</p>}
     </div>
   );

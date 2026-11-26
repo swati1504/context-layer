@@ -1,6 +1,7 @@
 // Topic-level stock photos from Unsplash. We search by topic (not by story) so images are relevant but never misleading,
 // and pick one deterministically per story so the feed does not repeat the same picture.
-export type Photo = { src: string; credit: string; creditUrl: string; alt: string };
+import { lookupSource } from "./sources";
+export type Photo = { src: string; credit: string; creditUrl: string; alt: string; kind?: "source" | "stock" };
 
 export const TOPIC_QUERY: Record<string, string> = {
   "AI at work": "people working on laptops office",
@@ -39,11 +40,29 @@ export async function topicPhotos(topic: string): Promise<Photo[]> {
       credit: p.user.name,
       creditUrl: `${p.user.links.html}?utm_source=context_layer&utm_medium=referral`,
       alt: p.alt_description ?? topic,
+      kind: "stock" as const,
     }));
   } catch { return []; }
 }
 
 export async function pickPhoto(topic: string, seed: string): Promise<Photo | null> {
+  if (/^https?:\/\//.test(seed)) { const own = await sourceImage(seed); if (own) return own; }
   const list = await topicPhotos(topic);
   return list.length ? list[hash(seed) % list.length] : null;
+}
+
+// The story's own lead image, read from the article page of an approved outlet (og:image). Hotlinked, never copied, and credited to the outlet.
+export async function sourceImage(url: string): Promise<Photo | null> {
+  const src = lookupSource(url);
+  if (!src) return null;
+  try {
+    const r = await fetch(url, { headers: { "user-agent": "Mozilla/5.0 (compatible; ContextLayerBot/0.1)", accept: "text/html" }, next: { revalidate: 604800 }, signal: AbortSignal.timeout(8000) });
+    if (!r.ok) return null;
+    const html = (await r.text()).slice(0, 120000);
+    const m = html.match(/<meta[^>]+(?:property|name)=["'](?:og:image|twitter:image)(?::src)?["'][^>]*content=["']([^"']+)["']/i) ?? html.match(/<meta[^>]+content=["']([^"']+)["'][^>]*(?:property|name)=["'](?:og:image|twitter:image)["']/i);
+    if (!m) return null;
+    const img = new URL(m[1].replace(/&amp;/g, "&"), url).toString();
+    if (!/^https:/.test(img)) return null;
+    return { src: img, credit: src.name, creditUrl: url, alt: "", kind: "source" };
+  } catch { return null; }
 }
