@@ -71,7 +71,8 @@ export async function getFeed(debug?: Record<string, number | string>): Promise<
       else byUrl.set(it.url, it);
     }
   });
-  return [...byUrl.values()].sort((a, b) => +new Date(b.published) - +new Date(a.published)).slice(0, 70);
+  const cutoff = Date.now() - 21 * 864e5; // niche topics publish less often, so keep three weeks instead of cutting by count
+  return [...byUrl.values()].filter((i) => !+new Date(i.published) || +new Date(i.published) > cutoff).sort((a, b) => +new Date(b.published) - +new Date(a.published)).slice(0, 120);
 }
 export const FEED_LIST = FEEDS;
 
