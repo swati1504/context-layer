@@ -59,7 +59,7 @@ export function Form({ url, title, parent, onPosted, onCancel, placeholder, need
   );
 }
 
-export default function Discussion({ url, title }: { url: string; title: string }) {
+export default function Discussion({ url, title, heading = "Discussion", prompt = "What do you think about this story?", note = "Reader opinions · not part of the reporting." }: { url: string; title: string; heading?: string; prompt?: string; note?: string }) {
   const [list, setList] = useState<C[] | null>(null);
   const [open, setOpen] = useState(true);
   const [needsCode, setNeedsCode] = useState(false);
@@ -72,8 +72,8 @@ export default function Discussion({ url, title }: { url: string; title: string 
   const kids = (id: string) => (list ?? []).filter((c) => c.parent === id);
   return (
     <section className="disc" id="discussion" aria-label="Discussion">
-      <h2>Discussion{list && list.length > 0 ? ` (${list.length})` : ""}</h2>
-      <p className="fine">Reader opinions &middot; not part of the reporting.</p>
+      <h2>{heading}{list && list.length > 0 ? ` (${list.length})` : ""}</h2>
+      <p className="fine">{note}</p>
       {list && list.length === 0 && <p className="empty" style={{ margin: "12px 0" }}>No comments yet. Start the conversation.</p>}
       {tops.map((c) => (
         <div className="cmt" key={c.id}>
@@ -90,7 +90,7 @@ export default function Discussion({ url, title }: { url: string; title: string 
         </div>
       ))}
       {open ? (
-        <Form needsCode={needsCode} url={url} title={title} placeholder="What do you think about this story?" onPosted={(n) => setList((l) => [...(l ?? []), n])} />
+        <Form needsCode={needsCode} url={url} title={title} placeholder={prompt} onPosted={(n) => setList((l) => [...(l ?? []), n])} />
       ) : <p className="fine">Posting isn&rsquo;t open yet. You can read the discussion here.</p>}
     </section>
   );
