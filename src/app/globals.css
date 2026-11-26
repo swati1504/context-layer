@@ -397,3 +397,16 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
 .reltitle { display: block; margin-top: 12px; font-family: var(--font-serif), Georgia, serif; font-weight: 500; font-size: 19px; line-height: 1.3; }
 .relgrid li a:hover .reltitle { text-decoration: underline; text-underline-offset: 3px; }
 @media (max-width: 640px) { .related ul.relgrid { grid-template-columns: 1fr; } }
+
+/* ---- story page ---- */
+.sec h5 { font-family: var(--font-serif), Georgia, serif; font-size: 26px; font-weight: 500; line-height: 1.2; letter-spacing: -0.01em; margin: 0 0 16px; }
+.sec { margin-top: 40px; padding-top: 32px; border-top: 1px solid var(--line); }
+.cited > span { display: block; margin-bottom: 12px; }
+.cited > span:last-child { margin-bottom: 0; }
+.xsec { margin: 32px 0; }
+.xsec h2 { font-size: 24px; margin-bottom: 12px; }
+.cited, .claim p { max-width: 62ch; }
+.claim { margin-bottom: 16px; }
+.card h1.story { margin-bottom: 12px; }
+.sec.assist { border-top: 0; padding: 20px; }
+.sec.assist h5 { font-family: inherit; font-size: 17px; font-weight: 600; margin-bottom: 8px; }
