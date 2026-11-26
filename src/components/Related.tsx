@@ -20,7 +20,6 @@ export default function Related({ url, title, tags }: { url: string; title: stri
         {items.map((r) => (
           <li key={r.url}>
             <Link href={`/story?u=${encodeURIComponent(r.url)}`} onClick={() => log("related_click", { from: url, to: r.url })}>{r.title}</Link>
-            <span className="fine">{r.source}</span>
           </li>
         ))}
       </ul>
