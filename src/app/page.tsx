@@ -135,7 +135,7 @@ export default function Home() {
     remember(r.card);
   }
 
-  async function submitPaste(text?: string) {
+  async function submitPaste(text?: string, source?: "screenshot") {
     const raw = paste.trim();
     if (!raw && !text) return;
     const url = text ? "" : normalize(raw);
@@ -144,15 +144,37 @@ export default function Home() {
     if (!isStudy() && !(url && usedCards().includes(url)) && atLimit(url)) { setLimit(true); return; }
     setPurl(url);
     setPslot({ status: "loading" });
-    log(text ? "paste_text_submit" : "get_context_click", { url, via: "paste" });
+    log(text ? (source ? "screenshot_submit" : "paste_text_submit") : "get_context_click", { url, via: "paste" });
     const t0 = Date.now();
-    const r = text ? await fetchCard({ text, title: raw ? new URL(url || "https://x").hostname : "Pasted text" }) : await fetchCard({ url });
+    const r = text ? await fetchCard({ text, source, title: source === "screenshot" ? "Your screenshot" : raw ? new URL(url || "https://x").hostname : "Pasted text" }) : await fetchCard({ url });
     if (!r.card) { log("card_error", { url, code: r.code }); setPslot({ status: "error", error: r.error, code: r.code }); return; }
     if (!r.cached) { markUsed(url || "text:" + Date.now()); setUsed(usedCards().length); }
     log("card_generated", { url, ms: Date.now() - t0, verified: r.card.verification.verified, total: r.card.verification.total, cached: !!r.cached });
     setPslot({ status: "done", card: r.card });
     remember(r.card);
     setTimeout(() => { result.current?.scrollIntoView({ behavior: "smooth", block: "start" }); result.current?.focus(); }, 50);
+  }
+
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [shotBusy, setShotBusy] = useState(false);
+  async function onShot(f: File | undefined) {
+    if (!f) return;
+    if (!isStudy() && atLimit("")) { setLimit(true); return; }
+    setShotBusy(true);
+    setPslot({ status: "loading" });
+    try {
+      const bmp = await createImageBitmap(f);
+      const k = Math.min(1, 1800 / Math.max(bmp.width, bmp.height));
+      const c = document.createElement("canvas");
+      c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
+      c.getContext("2d")!.drawImage(bmp, 0, 0, c.width, c.height);
+      const image = c.toDataURL("image/jpeg", 0.85);
+      const r = await fetch("/api/ocr", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ image }) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || !j.text) { setPslot({ status: "error", error: j.error === "no_text" ? "We could not find article text in that image. Try a clearer screenshot of the article itself." : j.error === "limit" ? MESSAGES.limit : "Could not read that image. Try again or paste the link." }); return; }
+      setPurl("");
+      await submitPaste(j.text, "screenshot");
+    } catch { setPslot({ status: "error", error: "Could not read that image. Try again or paste the link." }); } finally { setShotBusy(false); if (fileRef.current) fileRef.current.value = ""; }
   }
 
   function answer(url: string, a: "understand" | "partly" | "no") {
@@ -174,6 +196,12 @@ export default function Home() {
           <button className="btn" disabled={!paste.trim() || loadingPaste}>{loadingPaste ? "Reading…" : "Get context"}</button>
         </div>
       </form>
+      {!study && (
+        <p className="fine" style={{ margin: "8px 0 0" }}>
+          Or <button type="button" className="linkbtn" disabled={shotBusy || loadingPaste} onClick={() => fileRef.current?.click()}>upload a screenshot</button> of an article. Screenshots are labeled as not independently checked.
+          <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(e) => onShot(e.target.files?.[0])} />
+        </p>
+      )}
       <div className="bar">
         <span>Works with any public article. Outlets are labeled On our source list or Outside our source list.</span>
         {!study && <><span className="sep">|</span><span>{Math.min(used, FREE_LIMIT)} of {FREE_LIMIT} free links used this month. Feed stories are free. <Link href="/pricing">Plus is coming soon</Link></span></>}

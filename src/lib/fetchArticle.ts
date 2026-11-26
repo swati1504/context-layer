@@ -128,8 +128,8 @@ export async function fetchArticle(url: string, opts: { withPrimary?: boolean } 
 }
 
 // Paste-text fallback (used when a site blocks fetching)
-export function articleFromText(text: string, title = "Pasted text"): Article {
+export function articleFromText(text: string, title = "Pasted text", sourceName = "Pasted text"): Article {
   const clean = text.replace(/\s+/g, " ").trim();
   if (clean.length < 800) throw new FetchError("too_short", "Pasted text is too short");
-  return { url: "", title, text: clean.slice(0, 24000), sourceName: "Pasted text", tier: "pasted", approved: false };
+  return { url: "", title, text: clean.slice(0, 24000), sourceName, tier: "pasted", approved: false };
 }

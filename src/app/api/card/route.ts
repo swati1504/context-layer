@@ -5,9 +5,9 @@ import { buildCard, buildFromText, lookupCard, LimitError } from "@/lib/cardServ
 export const maxDuration = 60;
 
 export async function POST(req: Request) {
-  const { url, text, title } = await req.json().catch(() => ({}));
+  const { url, text, title, source } = await req.json().catch(() => ({}));
   try {
-    if (text) return NextResponse.json({ card: await buildFromText(String(text).slice(0, 40000), String(title ?? "Pasted text").slice(0, 200)) });
+    if (text) return NextResponse.json({ card: await buildFromText(String(text).slice(0, 40000), String(title ?? "Pasted text").slice(0, 200), source === "screenshot" ? "Your screenshot (not independently checked)" : undefined) });
     const key = String(url ?? "").trim();
     if (!key) return NextResponse.json({ error: "bad_url", message: "Paste a link to a news story." }, { status: 422 });
     const hit = await lookupCard(key);
