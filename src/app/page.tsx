@@ -134,7 +134,7 @@ export default function Home() {
     // Inside each tier, newer and more relevant both count: relevance (how strongly it matches) plus freshness that fades over about a day.
     const now = Date.now();
     const fresh = (iso: string) => { const t = +new Date(iso); return t ? 1 / (1 + Math.max(0, now - t) / 36e5 / 24) : 0.3; };
-    const weight = (b: (typeof base)[number]) => 0.4 * Math.min(b.score, 3) / 3 + 0.6 * fresh(b.it.published);
+    const weight = (b: (typeof base)[number]) => 0.3 * Math.min(b.score, 3) / 3 + 0.7 * fresh(b.it.published);
     const hit = list.filter((b) => b.match).sort((a, b) => weight(b) - weight(a) || a.i - b.i);
     const rest = list.filter((b) => !b.match).sort((a, b) => weight(b) - weight(a) || a.i - b.i);
     return { rows: [...hit, ...rest].map((b) => ({ ...b.it, reason: b.match || b.score > 0 ? b.reason : undefined })), split: hit.length };
