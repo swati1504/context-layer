@@ -24,7 +24,8 @@ Rules:
 - Facts about what happened, who is affected, what changed, dates, numbers and what readers can do come ONLY from the provided text. Each such sentence is one claim with an EXACT verbatim quote (20-200 characters) from the text it comes from. "from" is "primary" or "reporting" according to where the quote is.
 - Each claim is ONE sentence a quote fully supports, including timing, scope, certainty and who said it. Attribute company statements ("Backblaze says...").
 - Dates: use a date and year only as the quote gives them, tied to the same event. A practice that began on one date and a new policy that takes effect on another are different events. Never infer a year. Say rumors, plans and proposals are rumors, plans and proposals.
-- sections: 3-5 sections with plain headings that fit this story, written as questions or short labels (for example "What changed", "Are my files included?", "Who this affects", "What you can do", "What is still unclear"). Put the most useful practical question first. Each section has 1-3 claims in reading order so they flow as a short paragraph. Do not repeat the same fact in two sections.
+- sections: 4-5 sections with plain headings that fit this story, written as questions or short labels (for example "What changed", "Are my files included?", "Who this affects", "What you can do", "What is still unclear"). Put the most useful practical question first. Each section has 1-3 claims in reading order so they flow as a short paragraph. Do not repeat the same fact in two sections.
+- ALWAYS include one section headed exactly "Who this affects" with 1-2 claims naming who is affected, as the text states it (for example customers, users of a product, artists, employees). If the text does not say who is affected, include the section with an empty claims list. Do not guess.
 - Include a section headed "What you can do" ONLY if the text gives a practical step. If it gives none, include that section with an empty claims list (we will say the reporting does not say).
 - background: in at most 2 short sentences, explain ONE stable general concept a beginner needs for that section (for example what an IP address is). It must be timeless general knowledge: NO numbers, years, prices, company actions, news facts or claims about this story. Use an empty string when the section needs none. Most sections need none; give background for at most 2 sections.
 - faq: 3 questions a reader affected by this story would ask. Answer each with 1-2 claims from the text. If the text does not answer an important practical question (for example "Does this include my files?"), still include the question with an EMPTY answer list. Never answer from outside knowledge.`;
@@ -32,7 +33,7 @@ Rules:
 export type Section = { heading: string; claims: Claim2[]; background: string | null };
 export type Faq = { question: string; answers: Claim2[]; answered: boolean };
 export type Explainer = {
-  rev: 3;
+  rev: 4;
   sections: Section[];
   faq: Faq[];
   verification: { total: number; verified: number; dropped: number };
@@ -63,5 +64,5 @@ export async function generateExplainer(a: Article): Promise<Explainer> {
     return { question: f.question, answers, answered: answers.length > 0 };
   });
   if (sections.every((s) => s.claims.length === 0)) throw new Error("no verifiable explainer");
-  return { rev: 3, sections, faq, verification: { total: all.length, verified: good.size, dropped: all.length - good.size } };
+  return { rev: 4, sections, faq, verification: { total: all.length, verified: good.size, dropped: all.length - good.size } };
 }
