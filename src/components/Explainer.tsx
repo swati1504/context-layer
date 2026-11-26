@@ -114,26 +114,26 @@ export default function Explainer({ url, card }: { url: string; card: Card }) {
         <h5>The full explainer</h5>
         {s.st === "load" && <p className="skeleton" role="status" style={{ marginTop: 0 }}>Writing the full explainer from the sources. This takes about 20 seconds the first time.</p>}
         {s.st === "err" && <p className="fine">{s.msg}</p>}
-        {s.ex?.sections.map((sec, i) => (
+        {s.ex?.sections.map((sec, i) => sec.claims.length === 0 ? null : (
           <section className="xsec" key={i}>
             <h2>{sec.heading}</h2>
-            {sec.claims.length > 0 ? <Cited claims={sec.claims} card={card} start={secStarts[i]} /> : <p>The reporting does not say.</p>}
+            <Cited claims={sec.claims} card={card} start={secStarts[i]} />
             {sec.background && <p className="bg"><small>{BG}</small>{sec.background}</p>}
           </section>
         ))}
       </div>
-      {s.ex && s.ex.faq.length > 0 && (
+      {s.ex && s.ex.faq.some((f) => f.answered) && (
         <div className="sec">
           <h5>Go deeper</h5>
-          {s.ex.faq.map((f, i) => (
+          {s.ex.faq.map((f, i) => !f.answered ? null : (
             <details className="faq" key={i}>
               <summary>{f.question}</summary>
-              {f.answered ? <Cited claims={f.answers} card={card} start={faqStarts[i]} /> : <p>The sources for this story don&rsquo;t answer that.</p>}
+              <Cited claims={f.answers} card={card} start={faqStarts[i]} />
             </details>
           ))}
         </div>
       )}
-      <Assistant url={url} card={card} suggestions={[...(s.ex?.faq.map((f) => f.question) ?? []), card.question].filter((v, i, a) => v && a.indexOf(v) === i).slice(0, 4)} />
+      <Assistant url={url} card={card} suggestions={[...(s.ex?.faq.filter((f) => f.answered).map((f) => f.question) ?? []), card.question].filter((v, i, a) => v && a.indexOf(v) === i).slice(0, 4)} />
     </>
   );
 }
