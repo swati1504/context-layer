@@ -7,6 +7,7 @@ const sans = Instrument_Sans({ subsets: ["latin"], variable: "--font-sans" });
 const serif = Newsreader({ subsets: ["latin"], weight: ["400", "500"], variable: "--font-serif" });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://context-layer-flame.vercel.app"),
   title: "Context Layer: understand the story, not just the headline",
   description: "Tech news, explained in plain words. Every claim is checked against the article.",
 };
