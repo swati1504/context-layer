@@ -55,7 +55,7 @@ function Assistant({ url, card, suggestions }: { url: string; card: Card; sugges
     try {
       const r = await fetch("/api/ask", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ url, question: text }) });
       const j = await r.json();
-      if (!r.ok) return upd({ state: "err", msg: j.error === "limit" ? "The daily limit has been reached. Try again tomorrow." : "Could not answer that. Try again." });
+      if (!r.ok) return upd({ state: "err", msg: j.error === "cap" ? `You have used your ${LIMIT} free questions on this story.` : j.error === "limit" ? "The daily limit has been reached. Try again tomorrow." : "Could not answer that. Try again." });
       upd({ state: "done", answered: j.answered, parts: j.parts, background: j.background });
     } catch { upd({ state: "err", msg: "Could not answer that. Try again." }); }
   }

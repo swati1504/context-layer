@@ -197,8 +197,9 @@ export default function Home() {
       const image = c.toDataURL("image/jpeg", 0.85);
       const r = await fetch("/api/ocr", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ image }) });
       const j = await r.json().catch(() => ({}));
-      if (!r.ok || !j.text) { setPslot({ status: "error", error: j.error === "no_text" ? "We could not find article text in that image. Try a clearer screenshot of the article itself." : j.error === "limit" ? MESSAGES.limit : "Could not read that image. Try again or paste the link." }); return; }
+      if (!r.ok || !j.text) { setPslot({ status: "error", error: j.error === "not_article" ? "That looks like a list of headlines or search results, not one article. Open the article and screenshot its text (a few paragraphs), then upload that." : j.error === "no_text" ? "We could not find article text in that image. Try a clearer screenshot of the article itself." : j.error === "limit" ? MESSAGES.limit : "Could not read that image. Try again or paste the link." }); return; }
       setPurl("");
+      if (String(j.text).replace(/\s+/g, " ").length < 400) { setPslot({ status: "error", error: "We could only read a few lines in that image. Screenshot the article's text itself (a few paragraphs) and try again." }); return; }
       await submitPaste(j.text, "screenshot");
     } catch { setPslot({ status: "error", error: "Could not read that image. Try again or paste the link." }); } finally { setShotBusy(false); if (fileRef.current) fileRef.current.value = ""; }
   }
@@ -223,10 +224,14 @@ export default function Home() {
         </div>
       </form>
       {!study && (
-        <p className="fine" style={{ margin: "8px 0 0" }}>
-          Or <button type="button" className="linkbtn" disabled={shotBusy || loadingPaste} onClick={() => fileRef.current?.click()}>upload a screenshot</button> of an article. Screenshots are labeled as not independently checked.
+        <div className="shotrow">
+          <button type="button" className="btn sec-btn shotbtn" disabled={shotBusy || loadingPaste} onClick={() => fileRef.current?.click()}>
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="2" y="3" width="14" height="12" rx="2" /><circle cx="6.5" cy="7.5" r="1.3" /><path d="M2.5 13l4-3.5 3 2.5 2.5-2 3.5 3" /></svg>
+            {shotBusy ? "Reading your screenshot…" : "Upload a screenshot"}
+          </button>
+          <span className="fine">Of the article text, instead of a link. Not independently checked.</span>
           <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(e) => onShot(e.target.files?.[0])} />
-        </p>
+        </div>
       )}
       <div className="bar">
         <span>Works with any public article. Outlets are labeled On our source list or Outside our source list.</span>

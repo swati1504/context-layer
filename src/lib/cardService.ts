@@ -40,7 +40,7 @@ export function buildCard(url: string): Promise<VerifiedCard> {
   return p;
 }
 
-export async function buildFromText(text: string, title: string, sourceName?: string): Promise<VerifiedCard> {
+export async function buildFromText(text: string, title: string, sourceName?: string, min?: number): Promise<VerifiedCard> {
   if (!takeBudget()) throw new LimitError("limit");
-  return generateCard(articleFromText(text, title, sourceName));
+  return generateCard(articleFromText(text, title, sourceName, min));
 }

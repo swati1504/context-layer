@@ -5,6 +5,7 @@ import { quoteExists } from "@/lib/verify";
 import { datesOk, supportCheck, type Claim2 } from "@/lib/card";
 import { fetchArticle, FetchError } from "@/lib/fetchArticle";
 import { takeBudget } from "@/lib/budget";
+import { ASK_FREE, bumpCookie, usedFor } from "@/lib/askCap";
 
 export const maxDuration = 60;
 const claimJ = { type: "object", additionalProperties: false, required: ["text", "quote", "from"], properties: { text: { type: "string" }, quote: { type: "string" }, from: { type: "string", enum: ["primary", "reporting"] } } };
@@ -23,6 +24,7 @@ export async function POST(req: Request) {
   const url = String(b?.url ?? "").trim();
   const question = String(b?.question ?? "").trim().slice(0, 300);
   if (!url || question.length < 3) return NextResponse.json({ error: "bad_request" }, { status: 400 });
+  if (usedFor(req, url) >= ASK_FREE) return NextResponse.json({ error: "cap" }, { status: 429 });
   if (!takeBudget()) return NextResponse.json({ error: "limit" }, { status: 429 });
   try {
     const a = await fetchArticle(url, { withPrimary: true });
@@ -64,7 +66,9 @@ export async function POST(req: Request) {
       } catch { generic = false; }
     }
     const background = generic && bg && bg.length < 300 && !/\d|\$|%/.test(bg) && !/\b(often|usually|typically|generally|most|many)\b/i.test(bg) ? bg : null;
-    return NextResponse.json({ answered: parts.length > 0, parts, background, ...(b?.debug ? { trace, rawAnswer: raw.answer } : {}) });
+    const res = NextResponse.json({ answered: parts.length > 0, parts, background, ...(b?.debug ? { trace, rawAnswer: raw.answer } : {}) });
+    res.headers.append("set-cookie", bumpCookie(req, url));
+    return res;
   } catch (e) {
     if (e instanceof FetchError) return NextResponse.json({ error: e.code }, { status: 422 });
     console.error("ask failed:", e instanceof Error ? e.message : e);
