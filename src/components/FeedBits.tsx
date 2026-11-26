@@ -4,14 +4,15 @@ import { log, storyLink } from "@/lib/store";
 
 export function ShareIcon({ url, title, label = "Copy link to share" }: { url: string; title: string; label?: string }) {
   const [done, setDone] = useState(false);
+  const [failed, setFailed] = useState(false);
   async function go() {
     const link = storyLink(url);
     let ok = false;
     try { await navigator.clipboard.writeText(link); ok = true; } catch {
-      try { const t = document.createElement("textarea"); t.value = link; t.style.position = "fixed"; t.style.opacity = "0"; document.body.appendChild(t); t.select(); ok = document.execCommand("copy"); t.remove(); } catch {}
+      try { const t = document.createElement("textarea"); t.value = link; t.readOnly = true; t.style.position = "fixed"; t.style.opacity = "0"; document.body.appendChild(t); t.focus(); t.select(); t.setSelectionRange(0, link.length); ok = document.execCommand("copy"); t.remove(); } catch {}
     }
     log("share", { url, via: ok ? "copy" : "copy_failed", title: title.slice(0, 80) });
-    if (ok) { setDone(true); setTimeout(() => setDone(false), 2200); }
+    if (ok) { setDone(true); setTimeout(() => setDone(false), 2200); } else { setFailed(true); setTimeout(() => setFailed(false), 3000); }
   }
   return (
     <span className="sharewrap">
@@ -22,7 +23,7 @@ export function ShareIcon({ url, title, label = "Copy link to share" }: { url: s
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="2.6" /><circle cx="6" cy="12" r="2.6" /><circle cx="18" cy="19" r="2.6" /><path d="M8.3 10.7l7.4-4.2M8.3 13.3l7.4 4.2" /></svg>
         )}
       </button>
-      <span className="sharenote" role="status" aria-live="polite">{done ? "Link copied" : ""}</span>
+      <span className="sharenote" role="status" aria-live="polite">{done ? "Link copied" : failed ? "Could not copy" : ""}</span>
     </span>
   );
 }
