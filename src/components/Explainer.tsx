@@ -34,13 +34,20 @@ export function Cited({ claims, card, start }: { claims: Claim[]; card: Card; st
   );
 }
 
-function Assistant({ url, card, suggestions }: { url: string; card: Card; suggestions: string[] }) {
+type Suggestion = { q: string; parts: Claim[] };
+function Assistant({ url, card, suggestions }: { url: string; card: Card; suggestions: Suggestion[] }) {
   const key = "cl_ask_" + url;
   const [used, setUsed] = useState(0);
   const [q, setQ] = useState("");
   const [log2, setLog2] = useState<Qa[]>([]);
   useEffect(() => { try { setUsed(Number(localStorage.getItem(key) ?? 0)); } catch {} }, [key]);
   const left = LIMIT - used;
+
+  // A suggested question already has a checked answer from the full explainer, so show it directly (no wait, no question used).
+  function pick(sg: Suggestion) {
+    log("ask_suggestion", { url });
+    setLog2((l) => [...l, { q: sg.q, state: "done", answered: true, parts: sg.parts }]);
+  }
 
   async function ask(question: string) {
     const text = question.trim();
@@ -76,7 +83,7 @@ function Assistant({ url, card, suggestions }: { url: string; card: Card; sugges
       ))}
       {left > 0 && log2.length === 0 && suggestions.length > 0 && (
         <div className="chips" role="group" aria-label="Suggested questions">
-          {suggestions.map((t) => <button type="button" className="chip" key={t} onClick={() => ask(t)}>{t}</button>)}
+          {suggestions.map((t) => <button type="button" className="chip" key={t.q} onClick={() => pick(t)}>{t.q}</button>)}
         </div>
       )}
       {left > 0 ? (
@@ -133,7 +140,7 @@ export default function Explainer({ url, card }: { url: string; card: Card }) {
           ))}
         </div>
       )}
-      <Assistant url={url} card={card} suggestions={[...(s.ex?.faq.filter((f) => f.answered).map((f) => f.question) ?? []), card.question].filter((v, i, a) => v && a.indexOf(v) === i).slice(0, 4)} />
+      <Assistant url={url} card={card} suggestions={(s.ex?.faq ?? []).filter((f) => f.answered && f.answers.length > 0).map((f) => ({ q: f.question, parts: f.answers })).slice(0, 4)} />
     </>
   );
 }

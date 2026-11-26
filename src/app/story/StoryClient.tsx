@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import ContextCard, { factsOf, type Card } from "@/components/ContextCard";
 import Explainable from "@/components/Explainable";
 import Explainer from "@/components/Explainer";
@@ -21,7 +22,10 @@ const MSG: Record<string, string> = {
 export default function Story() {
   const [state, setState] = useState<{ s: "load" | "done" | "err"; card?: Card; msg?: string; local?: boolean }>({ s: "load" });
   const [url, setUrl] = useState("");
+  const search = useSearchParams().toString(); // a related story changes ?u= without reloading the page, so re-run when it changes
   useEffect(() => {
+    setState({ s: "load" });
+    window.scrollTo(0, 0);
     const q = new URLSearchParams(window.location.search);
     const local = q.get("c");
     if (local) {
@@ -44,7 +48,7 @@ export default function Story() {
         setState({ s: "done", card: j.card });
       })
       .catch(() => setState({ s: "err", msg: "Something went wrong building the story." }));
-  }, []);
+  }, [search]);
   return (
     <main className="narrow" style={{ paddingTop: 36 }}>
       <div className="storytop">

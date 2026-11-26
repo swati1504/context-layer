@@ -424,3 +424,8 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
 
 .dropveil { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; background: color-mix(in srgb, var(--bg) 82%, transparent); pointer-events: none; }
 .dropveil > div { border: 2px dashed var(--ink); border-radius: 16px; padding: 40px 56px; background: var(--panel); font-family: var(--font-serif), Georgia, serif; font-size: 24px; color: var(--text); }
+
+.xbtn-touch { left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 24px); top: auto; padding: 12px 22px; font-size: 15px; border-radius: 12px; box-shadow: var(--shadow); }
+.xpop-touch { left: 12px; right: 12px; width: auto; bottom: calc(env(safe-area-inset-bottom, 0px) + 16px); top: auto; max-height: 55vh; overflow: auto; font-size: 16px; }
+.w-demo .passage { margin: 0; padding-left: 12px; border-left: 3px solid var(--mark); color: var(--muted); font-size: 14px; line-height: 1.55; }
+.w-demo .passage mark { background: var(--mark-soft); color: var(--text); padding: 0 1px; }

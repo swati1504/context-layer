@@ -1,14 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Clipping } from "@/components/FeedBits";
 import Enter from "./Enter";
 
 export const metadata: Metadata = {
   title: "Context Layer: understand the story, not just the headline",
   description: "Tech news in plain words. Every claim links to the exact passage it came from, and the assistant says so when the sources don't answer you.",
 };
-
-const QUOTE = "Customers who do not opt out by March 3 will have their backups scanned and used to train the company's models.";
 
 export default function Welcome() {
   return (
@@ -25,7 +22,11 @@ export default function Welcome() {
             <h2>Every claim links to where it came from</h2>
             <p>Each sentence in a summary comes with the original passage. One click opens the article, scrolled to those words. If we can’t find the passage, the claim doesn’t appear.</p>
           </div>
-          <Clipping quote={QUOTE} />
+          <div className="w-demo">
+            <p>Customers who do not opt out by March 3 will have their backups used to train the company’s models <span className="cite">1</span></p>
+            <p className="q" style={{ marginTop: 14 }}>From the article</p>
+            <p className="passage">“<mark>Customers who do not opt out by March 3 will have their backups scanned and used to train the company's models.</mark>”</p>
+          </div>
         </article>
 
         <article className="w-item">

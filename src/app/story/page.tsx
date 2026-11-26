@@ -27,7 +27,7 @@ export default function Page() {
   return (
     <>
       <Suspense fallback={null}><Dynamic /></Suspense>
-      <StoryClient />
+      <Suspense fallback={null}><StoryClient /></Suspense>
     </>
   );
 }

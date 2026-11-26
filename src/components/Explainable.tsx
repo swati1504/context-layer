@@ -16,15 +16,22 @@ export default function Explainable({ children, facts, headline, url }: { childr
   const popRef = useRef<HTMLDivElement>(null);
   const [sel, setSel] = useState<Sel | null>(null);
   const [pop, setPop] = useState<Pop | null>(null);
+  const [touch, setTouch] = useState(false);
+  const touchRef = useRef(false);
+  const clearT = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => { try { const t = window.matchMedia("(pointer: coarse)").matches; touchRef.current = t; setTouch(t); } catch {} }, []);
 
   useEffect(() => {
+    // On touch screens, tapping our button can collapse the selection just before the click lands, so clear the button a moment later.
+    const drop = () => { if (!touchRef.current) { setSel(null); return; } if (clearT.current) clearTimeout(clearT.current); clearT.current = setTimeout(() => setSel(null), 700); };
     function read() {
+      if (clearT.current) { clearTimeout(clearT.current); clearT.current = null; }
       const s = window.getSelection();
-      if (!s || s.isCollapsed || s.rangeCount === 0 || !box.current) { setSel(null); return; }
+      if (!s || s.isCollapsed || s.rangeCount === 0 || !box.current) { drop(); return; }
       const r = s.getRangeAt(0);
-      if (!box.current.contains(r.commonAncestorContainer) || !okNode(s.anchorNode) || !okNode(s.focusNode)) { setSel(null); return; }
+      if (!box.current.contains(r.commonAncestorContainer) || !okNode(s.anchorNode) || !okNode(s.focusNode)) { drop(); return; }
       const text = s.toString().replace(/\s+/g, " ").trim();
-      if (text.length < 3 || text.length > 300) { setSel(null); return; }
+      if (text.length < 3 || text.length > 300) { drop(); return; }
       const b = r.getBoundingClientRect();
       setSel({ text, x: b.left + b.width / 2, top: b.top, bottom: b.bottom });
     }
@@ -60,12 +67,12 @@ export default function Explainable({ children, facts, headline, url }: { childr
     <div ref={box}>
       {children}
       {sel && !pop && (
-        <button className="xbtn" style={{ left: Math.max(70, Math.min(sel.x, window.innerWidth - 70)), top: sel.top > 64 ? sel.top - 44 : sel.bottom + 10 }} onMouseDown={(e) => e.preventDefault()} onClick={explain}>
+        <button className={touch ? "xbtn xbtn-touch" : "xbtn"} style={touch ? undefined : { left: Math.max(70, Math.min(sel.x, window.innerWidth - 70)), top: sel.top > 64 ? sel.top - 44 : sel.bottom + 10 }} onMouseDown={(e) => e.preventDefault()} onPointerDown={(e) => e.preventDefault()} onClick={explain}>
           Get more context
         </button>
       )}
       {pop && (
-        <div ref={popRef} className="xpop" role="dialog" aria-label="More context" style={{ left: clampX(pop.x, 340), ...(window.innerHeight - pop.bottom > 240 ? { top: pop.bottom + 10 } : { bottom: window.innerHeight - pop.top + 10 }) }}>
+        <div ref={popRef} className={touch ? "xpop xpop-touch" : "xpop"} role="dialog" aria-label="More context" style={touch ? undefined : { left: clampX(pop.x, 340), ...(window.innerHeight - pop.bottom > 240 ? { top: pop.bottom + 10 } : { bottom: window.innerHeight - pop.top + 10 }) }}>
           <button className="x" aria-label="Close explanation" onClick={() => setPop(null)}>×</button>
           <q>“{pop.text.length > 90 ? pop.text.slice(0, 87) + "…" : pop.text}”</q>
           {pop.state === "load" && <span>Explaining…</span>}
