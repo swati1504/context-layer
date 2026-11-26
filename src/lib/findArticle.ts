@@ -3,12 +3,14 @@ import { lookupSource } from "./sources";
 
 const STOP = new Set(["the", "a", "an", "and", "or", "of", "to", "in", "on", "for", "is", "are", "as", "at", "by", "with", "after", "that", "this", "its", "it", "from", "be", "has", "have"]);
 const words = (s: string) => new Set(s.toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter((w) => w.length > 1 && !STOP.has(w)));
+// Both headlines must share nearly all their distinctive words, so a similar but different story is never matched.
 function overlap(a: string, b: string) {
   const A = words(a), B = words(b);
   if (A.size < 3 || B.size < 3) return 0;
   let n = 0;
   for (const w of A) if (B.has(w)) n++;
-  return n / Math.min(A.size, B.size);
+  const cover = n / A.size, jac = n / (A.size + B.size - n);
+  return cover >= 0.85 && jac >= 0.55 ? cover : 0;
 }
 
 // The headline is the first line of the transcribed screenshot (or its first sentence).
@@ -27,7 +29,7 @@ export async function findArticle(headline: string): Promise<string | null> {
     const feed = await getFeed();
     let best = { s: 0, url: "" };
     for (const it of feed) { const s = overlap(headline, it.title); if (s > best.s) best = { s, url: it.url }; }
-    if (best.s >= 0.7) return best.url;
+    if (best.s > 0) return best.url;
   } catch {}
   try {
     const res = await fetch(`https://www.bing.com/news/search?q=${encodeURIComponent(headline)}&format=rss`, { headers: { "user-agent": "Mozilla/5.0 (compatible; ContextLayerBot/0.1)" }, signal: AbortSignal.timeout(8000), next: { revalidate: 3600 } });
@@ -41,7 +43,7 @@ export async function findArticle(headline: string): Promise<string | null> {
       try { const u = new URL(link); const t = u.searchParams.get("url"); if (t) url = t; } catch {}
       if (!/^https?:\/\//.test(url)) continue;
       const s = overlap(headline, title);
-      if (s >= 0.6) cands.push({ s, url, approved: !!lookupSource(url) });
+      if (s > 0) cands.push({ s, url, approved: !!lookupSource(url) });
     }
     cands.sort((a, b) => Number(b.approved) - Number(a.approved) || b.s - a.s);
     return cands[0]?.url ?? null;
