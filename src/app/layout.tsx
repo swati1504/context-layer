@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Instrument_Sans, Newsreader } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
+import Tracker from "@/components/Tracker";
 
 const sans = Instrument_Sans({ subsets: ["latin"], variable: "--font-sans" });
 const serif = Newsreader({ subsets: ["latin"], weight: ["400", "500"], variable: "--font-serif" });
@@ -20,6 +21,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head><script dangerouslySetInnerHTML={{ __html: themeScript }} /></head>
       <body>
         <Header />
+        <Tracker />
         {children}
       </body>
     </html>

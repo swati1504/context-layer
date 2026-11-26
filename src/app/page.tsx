@@ -170,7 +170,7 @@ export default function Home() {
     if (!raw && !text) return;
     const url = text ? "" : normalize(raw);
     const match = items?.find((i) => i.url === url);
-    if (match) { document.getElementById("row-" + CSS.escape(match.url))?.scrollIntoView({ behavior: "smooth", block: "center" }); if (!open[match.url]) toggleRow(match); return; }
+    if (match) { document.getElementById("row-" + match.url)?.scrollIntoView({ behavior: "smooth", block: "center" }); if (!open[match.url]) toggleRow(match); return; }
     if (!isStudy() && !(url && usedCards().includes(url)) && atLimit(url)) { setLimit(true); return; }
     setPurl(url);
     setPslot({ status: "loading" });

@@ -20,7 +20,54 @@ export async function GET(req: Request) {
     if (e.event === "familiarity_answer" && e.props.answer !== "understand") p.unfamiliar++;
   }
   const ctxChoice = count("get_context_click"), skipChoice = count("skip_click");
+  // ---- main app (everyone who is not a study participant, a rehearsal id or marked internal) ----
+  type E = (typeof all)[number];
+  const app = all.filter((e) => e.props?.study !== true && e.props?.internal !== true && !/^s_/.test(e.pid));
+  const by = (ev: string) => app.filter((e) => e.event === ev);
+  const pidsApp = new Set(app.map((e) => e.pid));
+  const str = (v: unknown) => String(v ?? "");
+  const openedKey = new Set([...by("get_context_click"), ...by("read_story_click")].map((e) => e.pid + "|" + str(e.props.url)));
+  const consideredKey = new Set([...by("preview_considered").map((e) => e.pid + "|" + str(e.props.url)), ...openedKey]);
+  const passedKey = [...consideredKey].filter((k) => !openedKey.has(k));
+  const dwellMax = new Map<string, number>();
+  for (const e of by("preview_dwell")) { const k = e.pid + "|" + str(e.props.url); dwellMax.set(k, Math.max(dwellMax.get(k) ?? 0, Number(e.props.ms) || 0)); }
+  const storyRows: Record<string, { considered: number; opened: number }> = {};
+  for (const k of consideredKey) { const u = k.slice(k.indexOf("|") + 1); const r = (storyRows[u] ??= { considered: 0, opened: 0 }); r.considered++; if (openedKey.has(k)) r.opened++; }
+  const reads = by("page_leave").filter((e) => e.props.path === "/story");
+  const med = (a: number[]) => { const b = [...a].sort((x, y) => x - y); return b.length ? b[Math.floor(b.length / 2)] : null; };
+  const hosts: Record<string, number> = {};
+  for (const e of by("outbound_click")) hosts[str(e.props.host)] = (hosts[str(e.props.host)] ?? 0) + 1;
+  const devices: Record<string, number> = {};
+  for (const e of by("visitor_new")) devices[str(e.props.device)] = (devices[str(e.props.device)] ?? 0) + 1;
+  const errs: Record<string, number> = {};
+  for (const e of by("client_error")) errs[str(e.props.message)] = (errs[str(e.props.message)] ?? 0) + 1;
+  const visitors = [...pidsApp].map((pid) => {
+    const ev = app.filter((e: E) => e.pid === pid);
+    const ts = ev.map((e) => +new Date(e.ts));
+    const mine = (k: Set<string>) => [...k].filter((x) => x.startsWith(pid + "|")).length;
+    return {
+      pid, first: new Date(Math.min(...ts)).toISOString(), last: new Date(Math.max(...ts)).toISOString(),
+      device: str(ev.find((e) => e.event === "visitor_new" || e.event === "session_start")?.props.device),
+      events: ev.length, considered: mine(consideredKey), opened: mine(openedKey),
+      read_s: Math.round(ev.filter((e) => e.event === "page_leave" && e.props.path === "/story").reduce((a, e) => a + (Number(e.props.ms) || 0), 0) / 1000),
+      questions: ev.filter((e) => e.event === "ask_question").length,
+    };
+  }).sort((a, b) => b.last.localeCompare(a.last)).slice(0, 60);
+  const appStats = {
+    visitors: pidsApp.size, new_visitors: by("visitor_new").length, sessions: by("session_start").length,
+    returning_visitors: new Set(by("return_visit").map((e) => e.pid)).size, devices,
+    previews_considered: consideredKey.size, opened_context: openedKey.size, passed: passedKey.length,
+    open_rate: consideredKey.size ? Math.round((100 * [...consideredKey].filter((k) => openedKey.has(k)).length) / consideredKey.size) : null,
+    avg_preview_s_passed: passedKey.length ? Math.round(passedKey.reduce((a, k) => a + (dwellMax.get(k) ?? 3000), 0) / passedKey.length / 100) / 10 : null,
+    story_reads: reads.length, median_read_s: med(reads.map((e) => Number(e.props.ms) / 1000)), read_to_end_pct: reads.length ? Math.round((100 * reads.filter((e) => Number(e.props.depth) >= 75).length) / reads.length) : null,
+    outbound_clicks: by("outbound_click").length, outbound_hosts: hosts,
+    questions: by("ask_question").length, highlights: by("explain_selection").length, saves: by("favorite").length, shares: by("share").length, passages_opened: by("claim_opened").length,
+    screenshots: by("screenshot_submit").length, errors: errs,
+    top_stories: Object.entries(storyRows).sort((a, b) => b[1].considered - a[1].considered).slice(0, 15).map(([url, r]) => ({ url, ...r })),
+    visitor_list: visitors,
+  };
   return NextResponse.json({
+    app: appStats,
     supabase: sbEnabled,
     participants: pids.size,
     familiarity: fam,

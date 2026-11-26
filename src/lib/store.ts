@@ -20,7 +20,7 @@ export function isStudy(): boolean {
 }
 export function log(event: string, props: Record<string, unknown> = {}) {
   try {
-    fetch("/api/log", { method: "POST", keepalive: true, headers: { "content-type": "application/json" }, body: JSON.stringify({ pid: pid(), event, props: { ...props, study: isStudy() } }) }).catch(() => {});
+    fetch("/api/log", { method: "POST", keepalive: true, headers: { "content-type": "application/json" }, body: JSON.stringify({ pid: pid(), event, props: { ...props, study: isStudy(), ...(get<string>("cl_internal", "") ? { internal: true } : {}) } }) }).catch(() => {});
   } catch {}
 }
 
