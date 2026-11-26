@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { connection } from "next/server";
 import { lookupCard } from "@/lib/cardService";
 import StoryClient from "./StoryClient";
 
 export async function generateMetadata({ searchParams }: { searchParams: Promise<{ u?: string }> }): Promise<Metadata> {
-  await connection();
   const { u } = await searchParams;
   if (!u) return { title: "Context Layer" };
   let card = null;
@@ -21,4 +21,13 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
   };
 }
 
-export default function Page() { return <StoryClient />; }
+async function Dynamic() { await connection(); return null; }
+
+export default function Page() {
+  return (
+    <>
+      <Suspense fallback={null}><Dynamic /></Suspense>
+      <StoryClient />
+    </>
+  );
+}
