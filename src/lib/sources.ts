@@ -17,6 +17,7 @@ export const SOURCES: Record<string, { name: string; tier: SourceTier }> = {
   "arstechnica.com": { name: "Ars Technica", tier: "reporting" },
   "wired.com": { name: "Wired", tier: "reporting" },
   "cnbc.com": { name: "CNBC", tier: "reporting" },
+  "edsurge.com": { name: "EdSurge", tier: "reporting" },
   "ftc.gov": { name: "FTC", tier: "other-side" },
   "ec.europa.eu": { name: "European Commission", tier: "other-side" },
   "eff.org": { name: "EFF", tier: "other-side" },

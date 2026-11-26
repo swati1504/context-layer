@@ -25,6 +25,10 @@ const FEEDS: { source: string; url: string; hint?: string[]; take?: number }[] =
   { source: "Wired", url: "https://www.wired.com/feed/category/science/latest/rss", hint: ["Health and science"], take: 4 },
   { source: "The Verge", url: "https://www.theverge.com/rss/policy/index.xml", hint: ["Policy and law"], take: 4 },
   { source: "The Verge", url: "https://www.theverge.com/rss/science/index.xml", hint: ["Health and science"], take: 4 },
+  { source: "TechCrunch", url: "https://techcrunch.com/category/startups/feed/", hint: ["Startups"], take: 5 },
+  { source: "EdSurge", url: "https://www.edsurge.com/articles_rss", hint: ["Kids and school"], take: 6 },
+  { source: "The Verge", url: "https://www.theverge.com/rss/entertainment/index.xml", hint: ["Creators and media"], take: 4 },
+  { source: "The Verge", url: "https://www.theverge.com/rss/creators/index.xml", hint: ["Creators and media"], take: 4 },
   { source: "CNBC", url: "https://www.cnbc.com/id/19854910/device/rss/rss.html", hint: ["Money and business"], take: 5 },
   { source: "CNBC", url: "https://www.cnbc.com/id/10000108/device/rss/rss.html", hint: ["Health and science"], take: 4 },
 ];
