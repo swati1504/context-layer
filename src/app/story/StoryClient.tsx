@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import ContextCard, { factsOf, type Card } from "@/components/ContextCard";
 import Explainable from "@/components/Explainable";
 import Explainer from "@/components/Explainer";
+import StoryImage from "@/components/StoryImage";
 import { ShareIcon } from "@/components/FeedBits";
 import Related from "@/components/Related";
 import Discussion from "@/components/Discussion";
@@ -42,6 +43,7 @@ export default function Story() {
       </div>
       {state.s === "load" && <p className="skeleton" role="status">Reading the article and checking every quote. This takes about 15 seconds.</p>}
       {state.s === "err" && <p className="err" role="alert">{state.msg} <Link href="/">Go to the feed</Link></p>}
+      {state.s === "done" && state.card && <div style={{ marginBottom: 20 }}><StoryImage size="hero" seed={url} text={state.card.headline + " " + state.card.summary.text} /></div>}
       {state.s === "done" && state.card && (
         <Explainable facts={factsOf(state.card)} headline={state.card.headline} url={url}>
           <ContextCard card={state.card} url={url} extra={<Explainer url={url} card={state.card} />} />

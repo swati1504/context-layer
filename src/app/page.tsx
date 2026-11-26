@@ -4,7 +4,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Trending from "@/components/Trending";
 import ContextCard, { TermText, factsOf, readTime, type Card } from "@/components/ContextCard";
 import Explainable from "@/components/Explainable";
-import { Clipping, ShareIcon, WhyThis } from "@/components/FeedBits";
+import StoryImage from "@/components/StoryImage";
+import { ShareIcon, WhyThis } from "@/components/FeedBits";
 import { addHistory, openProfile, rankReason, readHistory, useProfile } from "@/lib/profile";
 import { FREE_LIMIT, atLimit, isStudy, log, markUsed, useFavs, usedCards } from "@/lib/store";
 
@@ -265,13 +266,24 @@ export default function Home() {
                     <p className="summary clamp"><TermText text={card.summary.text} jargon={card.jargon} url={it.url} /></p>
                     {card.tags.length > 0 && <ul className="tags" aria-label="Topics">{card.tags.slice(0, 3).map((t) => <li key={t}>{t}</li>)}</ul>}
                   </div>
-                  <Clipping quote={card.summary.quote} />
+                  <StoryImage seed={it.url} text={it.title + " " + card.summary.text} topics={it.topics} />
                 </div>
               ) : (
-                <>
-                  <h3>{it.title}</h3>
-                  {it.teaser && <p className="teaser">{it.teaser}</p>}
-                </>
+                study ? (
+                  <>
+                    <h3>{it.title}</h3>
+                    {it.teaser && <p className="teaser">{it.teaser}</p>}
+                  </>
+                ) : (
+                  <div className="rowgrid">
+                    <div className="rowmain">
+                      <h3>{it.title}</h3>
+                      {it.teaser && <p className="teaser" style={{ marginBottom: 12 }}>{it.teaser}</p>}
+                      {it.topics?.length > 0 && <ul className="tags" aria-label="Topics">{it.topics.slice(0, 3).map((t) => <li key={t}>{t}</li>)}</ul>}
+                    </div>
+                    <StoryImage seed={it.url} text={it.title + " " + it.teaser} topics={it.topics} />
+                  </div>
+                )
               )}
 
               {study && stage === "ask" && (

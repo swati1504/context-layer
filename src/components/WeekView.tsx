@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import StoryImage from "@/components/StoryImage";
 import { Cited } from "@/components/Explainer";
 import type { Card } from "@/components/ContextCard";
 import { log } from "@/lib/store";
@@ -33,7 +34,8 @@ export default function WeekView() {
         const s2 = n; n += it.affects.length;
         return (
           <article className="row" key={it.url}>
-            <h2 style={{ fontWeight: 800, fontSize: 24, lineHeight: 1.2, margin: "0 0 12px", letterSpacing: "-0.02em" }}>{it.headline}</h2>
+            <div style={{ marginBottom: 16 }}><StoryImage seed={it.url} text={it.headline + " " + it.changed.map((c) => c.text).join(" ")} /></div>
+            <h2 className="wk-title">{it.headline}</h2>
             <h3 className="wk-h">What changed</h3>
             <Cited claims={it.changed} card={card} start={s1} />
             <h3 className="wk-h">Who it affects</h3>

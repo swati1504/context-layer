@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import StoryImage from "@/components/StoryImage";
 import { log } from "@/lib/store";
 
 export default function Related({ url, title, tags }: { url: string; title: string; tags: string[] }) {
@@ -19,7 +20,7 @@ export default function Related({ url, title, tags }: { url: string; title: stri
       <ul>
         {items.map((r) => (
           <li key={r.url}>
-            <Link href={`/story?u=${encodeURIComponent(r.url)}`} onClick={() => log("related_click", { from: url, to: r.url })}>{r.title}</Link>
+            <div className="rel-thumb"><StoryImage size="thumb" seed={r.url} text={r.title} credit={false} /></div><Link href={`/story?u=${encodeURIComponent(r.url)}`} onClick={() => log("related_click", { from: url, to: r.url })}>{r.title}</Link>
           </li>
         ))}
       </ul>
