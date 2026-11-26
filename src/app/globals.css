@@ -405,7 +405,7 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
 .cited > span:last-child { margin-bottom: 0; }
 .xsec { margin: 32px 0; }
 .xsec h2 { font-size: 24px; margin-bottom: 12px; }
-.cited, .claim p { max-width: 62ch; }
+.cite { margin-left: 2px; }
 .claim { margin-bottom: 16px; }
 .card h1.story { margin-bottom: 12px; }
 .sec.assist { border-top: 0; padding: 20px; }
