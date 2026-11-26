@@ -190,16 +190,28 @@ export default function Home() {
     setPslot({ status: "loading" });
     try {
       const bmp = await createImageBitmap(f);
-      const k = Math.min(1, 1800 / Math.max(bmp.width, bmp.height));
-      const c = document.createElement("canvas");
-      c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
-      c.getContext("2d")!.drawImage(bmp, 0, 0, c.width, c.height);
-      const image = c.toDataURL("image/jpeg", 0.85);
-      const r = await fetch("/api/ocr", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ image }) });
-      const j = await r.json().catch(() => ({}));
+      // Scale by width and cut tall screenshots into slices, so long article captures stay readable.
+      const k = Math.min(1, 1400 / bmp.width);
+      const W = Math.round(bmp.width * k), H = Math.round(bmp.height * k);
+      const TILE = 1800, tiles = Math.min(5, Math.ceil(H / TILE));
+      const parts: string[] = [];
+      let lastErr = "";
+      for (let t = 0; t < tiles; t++) {
+        const y = t * TILE, h = Math.min(TILE, H - y);
+        const c = document.createElement("canvas");
+        c.width = W; c.height = h;
+        c.getContext("2d")!.drawImage(bmp, 0, y / k, bmp.width, h / k, 0, 0, W, h);
+        const r = await fetch("/api/ocr", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ image: c.toDataURL("image/jpeg", 0.85) }) });
+        const jj = await r.json().catch(() => ({}));
+        if (r.ok && jj.text) parts.push(jj.text); else lastErr = jj.error ?? "server";
+        if (lastErr === "limit") break;
+      }
+      const j = { text: parts.join("\n\n"), error: parts.length ? "" : lastErr };
+      const r = { ok: parts.length > 0 };
       if (!r.ok || !j.text) { setPslot({ status: "error", error: j.error === "not_article" ? "That looks like a list of headlines or search results, not one article. Open the article and screenshot its text (a few paragraphs), then upload that." : j.error === "no_text" ? "We could not find article text in that image. Try a clearer screenshot of the article itself." : j.error === "limit" ? MESSAGES.limit : "Could not read that image. Try again or paste the link." }); return; }
       setPurl("");
-      if (String(j.text).replace(/\s+/g, " ").length < 400) { setPslot({ status: "error", error: "We could only read a few lines in that image. Screenshot the article's text itself (a few paragraphs) and try again." }); return; }
+      const n = String(j.text).replace(/\s+/g, " ").length;
+      if (n < 400) { setPslot({ status: "error", error: `We could only read ${n} characters in that image. Screenshot the article text itself (at least a few paragraphs) and try again.` }); return; }
       await submitPaste(j.text, "screenshot");
     } catch { setPslot({ status: "error", error: "Could not read that image. Try again or paste the link." }); } finally { setShotBusy(false); if (fileRef.current) fileRef.current.value = ""; }
   }
