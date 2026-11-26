@@ -292,3 +292,6 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
 .cform label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; flex: 1; min-width: 150px; }
 .cform input, .cform textarea { font: inherit; font-size: 15px; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--line); background: transparent; color: inherit; width: 100%; box-sizing: border-box; }
 .cform textarea { resize: vertical; }
+.disc-new { margin: 16px 0 0; }
+.disc-new select { font: inherit; font-size: 15px; width: 100%; box-sizing: border-box; padding: 9px 12px; margin-top: 4px; border-radius: 10px; border: 1px solid var(--line); background: transparent; color: inherit; }
+.disc-new select option { color: #111; }

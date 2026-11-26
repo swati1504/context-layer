@@ -20,7 +20,7 @@ const ago = (iso: string) => {
   return m < 60 ? `${m} min ago` : m < 1440 ? `${Math.round(m / 60)} h ago` : `${Math.round(m / 1440)} d ago`;
 };
 
-function Form({ url, title, parent, onPosted, onCancel, placeholder }: { url: string; title: string; parent?: string; onPosted: (c: C) => void; onCancel?: () => void; placeholder: string }) {
+export function Form({ url, title, parent, onPosted, onCancel, placeholder, needsCode }: { url: string; title: string; parent?: string; onPosted: (c: C) => void; onCancel?: () => void; placeholder: string; needsCode?: boolean }) {
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [body, setBody] = useState("");
@@ -45,12 +45,12 @@ function Form({ url, title, parent, onPosted, onCancel, placeholder }: { url: st
     <form className="cform" onSubmit={post}>
       <div className="crow">
         <label>Display name<input value={name} maxLength={24} onChange={(e) => setName(e.target.value)} autoComplete="nickname" /></label>
-        {!hasCode && <label>Invite code<input value={code} onChange={(e) => setCode(e.target.value)} autoComplete="off" /></label>}
+        {needsCode && !hasCode && <label>Invite code<input value={code} onChange={(e) => setCode(e.target.value)} autoComplete="off" /></label>}
       </div>
       <p className="fine" style={{ margin: "0 0 8px" }}>Your display name appears publicly. A nickname is fine.</p>
       <textarea aria-label="Your comment" placeholder={placeholder} maxLength={280} rows={parent ? 2 : 3} value={body} onChange={(e) => setBody(e.target.value)} />
       <div className="actions" style={{ marginTop: 8 }}>
-        <button className="btn" disabled={busy || body.trim().length < 2 || name.trim().length < 2 || !code.trim()}>{busy ? "Posting…" : parent ? "Reply" : "Post comment"}</button>
+        <button className="btn" disabled={busy || body.trim().length < 2 || name.trim().length < 2 || (!!needsCode && !code.trim())}>{busy ? "Posting…" : parent ? "Reply" : "Post comment"}</button>
         {onCancel && <button type="button" className="quiet" onClick={onCancel}>Cancel</button>}
         <span className="fine">{280 - body.length} characters left</span>
       </div>
@@ -62,9 +62,10 @@ function Form({ url, title, parent, onPosted, onCancel, placeholder }: { url: st
 export default function Discussion({ url, title }: { url: string; title: string }) {
   const [list, setList] = useState<C[] | null>(null);
   const [open, setOpen] = useState(true);
+  const [needsCode, setNeedsCode] = useState(false);
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const load = useCallback(() => {
-    fetch("/api/comments?u=" + encodeURIComponent(url)).then((r) => r.json()).then((j) => { setList(j.comments ?? []); setOpen(j.open !== false); }).catch(() => setList([]));
+    fetch("/api/comments?u=" + encodeURIComponent(url)).then((r) => r.json()).then((j) => { setList(j.comments ?? []); setOpen(j.open !== false); setNeedsCode(!!j.needsCode); }).catch(() => setList([]));
   }, [url]);
   useEffect(() => { load(); }, [load]);
   const tops = (list ?? []).filter((c) => !c.parent);
@@ -85,11 +86,11 @@ export default function Discussion({ url, title }: { url: string; title: string 
               <p className="cbody">{k.body}</p>
             </div>
           ))}
-          {replyTo === c.id && <Form url={url} title={title} parent={c.id} placeholder="Write a reply" onCancel={() => setReplyTo(null)} onPosted={(n) => { setList((l) => [...(l ?? []), n]); setReplyTo(null); }} />}
+          {replyTo === c.id && <Form needsCode={needsCode} url={url} title={title} parent={c.id} placeholder="Write a reply" onCancel={() => setReplyTo(null)} onPosted={(n) => { setList((l) => [...(l ?? []), n]); setReplyTo(null); }} />}
         </div>
       ))}
       {open ? (
-        <Form url={url} title={title} placeholder="What do you think about this story?" onPosted={(n) => setList((l) => [...(l ?? []), n])} />
+        <Form needsCode={needsCode} url={url} title={title} placeholder="What do you think about this story?" onPosted={(n) => setList((l) => [...(l ?? []), n])} />
       ) : <p className="fine">Posting isn&rsquo;t open yet. You can read the discussion here.</p>}
     </section>
   );

@@ -14,7 +14,7 @@ const pub = ({ id, url, title, parent, name, body, ts }: { id: string; url: stri
 // GET ?u=<story url> -> that story's comments. No u -> recent conversations across stories.
 export async function GET(req: Request) {
   const u = new URL(req.url).searchParams.get("u");
-  if (u) return NextResponse.json({ comments: (await listComments(u)).map(pub), enabled: sbEnabled, open: !!process.env.DISCUSSION_CODE });
+  if (u) return NextResponse.json({ comments: (await listComments(u)).map(pub), enabled: sbEnabled, open: sbEnabled, needsCode: !!process.env.DISCUSSION_CODE });
   const all = (await recentComments()).map(pub);
   const byUrl = new Map<string, { url: string; title: string; count: number; latest: ReturnType<typeof pub> }>();
   for (const c of all) {
@@ -26,15 +26,15 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const code = process.env.DISCUSSION_CODE;
-  if (!sbEnabled || !code) return NextResponse.json({ error: "closed" }, { status: 503 });
+  const code = process.env.DISCUSSION_CODE; // optional: if set in Vercel, posting needs this invite code
+  if (!sbEnabled) return NextResponse.json({ error: "closed" }, { status: 503 });
   const b = await req.json().catch(() => null);
   const url = String(b?.url ?? "").slice(0, 600);
   const title = String(b?.title ?? "").slice(0, 200);
   const name = String(b?.name ?? "").replace(/\s+/g, " ").trim();
   const body = String(b?.body ?? "").replace(/\s+/g, " ").trim();
   const parent = b?.parent ? String(b.parent) : null;
-  if (String(b?.code ?? "").trim() !== code) return NextResponse.json({ error: "bad_code" }, { status: 401 });
+  if (code && String(b?.code ?? "").trim() !== code) return NextResponse.json({ error: "bad_code" }, { status: 401 });
   if (!/^https?:\/\//i.test(url)) return NextResponse.json({ error: "bad_request" }, { status: 400 });
   if (name.length < 2 || name.length > 24) return NextResponse.json({ error: "bad_name" }, { status: 400 });
   if (body.length < 2 || body.length > 280) return NextResponse.json({ error: "bad_body" }, { status: 400 });
