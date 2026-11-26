@@ -299,3 +299,23 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
 .weekcard { display: flex; flex-direction: column; gap: 2px; padding: 14px 16px; margin: 0 0 24px; border-radius: 14px; background: var(--accent-bg); color: var(--text); text-decoration: none; }
 .weekcard strong { font-size: 16px; }
 .weekcard span { font-size: 13.5px; opacity: 0.8; }
+
+/* Pricing */
+.wide-page { max-width: 1080px; margin: 0 auto; padding: 48px 24px 96px; }
+.plans-head { text-align: center; margin-bottom: 8px; }
+.plans-head .page-title { margin-bottom: 8px; }
+.plans-head p { margin: 0; color: var(--muted); font-size: 18px; }
+.wide-page .plans { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin: 40px 0 24px; align-items: stretch; }
+.wide-page .plan { padding: 32px 28px; border-radius: 20px; }
+.wide-page .plan h3 { font-size: 18px; margin-bottom: 14px; }
+.wide-page .plan .price { font-size: 44px; line-height: 1.05; }
+.plan-sub { display: block; margin-top: 6px; color: var(--muted); font-size: 14px; }
+.wide-page .plan ul { list-style: none; padding: 0; margin: 24px 0 28px; display: flex; flex-direction: column; gap: 12px; }
+.wide-page .plan li { margin: 0; padding-left: 26px; position: relative; line-height: 1.45; color: var(--text); font-size: 15px; }
+.wide-page .plan li::before { content: ""; position: absolute; left: 2px; top: 0.5em; width: 7px; height: 12px; border: solid var(--accent); border-width: 0 2px 2px 0; transform: translateY(-50%) rotate(45deg); }
+.wide-page .plan li.soon { color: var(--muted); }
+.wide-page .plan li.soon::before { border-color: var(--muted); opacity: 0.5; }
+.chip { display: inline-block; font-size: 11.5px; font-weight: 600; padding: 1px 8px; margin-right: 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); vertical-align: 1px; }
+.plan-cta { display: grid; place-items: center; text-decoration: none; margin-top: auto; }
+.plans-note { text-align: center; color: var(--muted); font-size: 14px; max-width: 640px; margin: 0 auto; }
+@media (max-width: 860px) { .wide-page .plans { grid-template-columns: 1fr; } .wide-page { padding: 32px 16px 72px; } }
