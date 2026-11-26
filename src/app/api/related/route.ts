@@ -24,6 +24,11 @@ export async function GET(req: Request) {
       const dup = overlap(tw, words(i.title)) >= 4;
       return { i, c, s, dup };
     }).filter((x) => !x.dup && x.s > 0).sort((a, b) => b.s - a.s).slice(0, 4);
-    return NextResponse.json({ items: scored.map(({ i, c }) => ({ url: i.url, source: i.source, title: c?.headline ?? i.title })) });
+    const clean = (t: string) => t.replace(/\s+[|\-–]\s+(TechCrunch|The Verge|Ars Technica|WIRED|Wired)$/i, "");
+    const map = ({ i, c }: { i: (typeof feed)[number]; c?: { headline?: string } }) => ({ url: i.url, source: i.source, title: clean(c?.headline ?? i.title) });
+    if (scored.length >= 2) return NextResponse.json({ kind: "related", items: scored.map(map) });
+    const used = new Set(scored.map((x) => x.i.url));
+    const more = feed.filter((i) => !used.has(i.url) && overlap(tw, words(i.title)) < 4).slice(0, 3 - scored.length).map((i) => ({ i, c: cards[i.url] }));
+    return NextResponse.json({ kind: scored.length ? "related" : "more", items: [...scored, ...more].map(map) });
   } catch { return NextResponse.json({ items: [] }); }
 }
