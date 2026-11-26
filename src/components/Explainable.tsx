@@ -5,6 +5,11 @@ import { log } from "@/lib/store";
 type Sel = { text: string; x: number; top: number; bottom: number };
 type Pop = Sel & { state: "load" | "done" | "err"; out?: string; covered?: boolean };
 
+// Only story text can be explained. Buttons, labels, the sources footer, tags and form fields never get the popover.
+const ALLOW = ".claimtxt, .claim, .cited, .xsec p, .faq p, .evid, .summary, .teaser, .pts li, .define, .termdef, .bg, .qa p, .assist .qa";
+const DENY = "button:not(.term), a:not(.term), input, textarea, figcaption, .foot, .src, .row2, .side, .fine, .meta, .tags, .chips, .chip, .reason, .notice, h1, h2, h3, h4, h5, .qa-q, .cite";
+const okNode = (n: Node | null) => { const el = n && (n.nodeType === 1 ? (n as Element) : n.parentElement); return !!el && !!el.closest(ALLOW) && !el.closest(DENY); };
+
 // Select any words inside this block and get a plain-English explanation grounded in the story's source passages.
 export default function Explainable({ children, facts, headline, url }: { children: ReactNode; facts: string[]; headline: string; url: string }) {
   const box = useRef<HTMLDivElement>(null);
@@ -17,7 +22,7 @@ export default function Explainable({ children, facts, headline, url }: { childr
       const s = window.getSelection();
       if (!s || s.isCollapsed || s.rangeCount === 0 || !box.current) { setSel(null); return; }
       const r = s.getRangeAt(0);
-      if (!box.current.contains(r.commonAncestorContainer)) { setSel(null); return; }
+      if (!box.current.contains(r.commonAncestorContainer) || !okNode(s.anchorNode) || !okNode(s.focusNode)) { setSel(null); return; }
       const text = s.toString().replace(/\s+/g, " ").trim();
       if (text.length < 3 || text.length > 300) { setSel(null); return; }
       const b = r.getBoundingClientRect();
