@@ -2,26 +2,28 @@
 import { useEffect, useRef, useState } from "react";
 import { log, storyLink } from "@/lib/store";
 
-export function ShareIcon({ url, title, label = "Share this story" }: { url: string; title: string; label?: string }) {
+export function ShareIcon({ url, title, label = "Copy link to share" }: { url: string; title: string; label?: string }) {
   const [done, setDone] = useState(false);
   async function go() {
     const link = storyLink(url);
-    try {
-      if (typeof navigator.share === "function") { await navigator.share({ title, url: link }); log("share", { url, via: "native" }); return; }
-      await navigator.clipboard.writeText(link);
-      log("share", { url, via: "copy" });
-      setDone(true);
-      setTimeout(() => setDone(false), 2000);
-    } catch {}
+    let ok = false;
+    try { await navigator.clipboard.writeText(link); ok = true; } catch {
+      try { const t = document.createElement("textarea"); t.value = link; t.style.position = "fixed"; t.style.opacity = "0"; document.body.appendChild(t); t.select(); ok = document.execCommand("copy"); t.remove(); } catch {}
+    }
+    log("share", { url, via: ok ? "copy" : "copy_failed", title: title.slice(0, 80) });
+    if (ok) { setDone(true); setTimeout(() => setDone(false), 2200); }
   }
   return (
-    <button type="button" className="iconbtn sharebtn" onClick={go} aria-label={done ? "Link copied" : label} title={done ? "Link copied" : label}>
-      {done ? (
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8.5l3.2 3L13 4.5" /></svg>
-      ) : (
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M8 10.5V2.5M5 5l3-2.8L11 5" /><path d="M3 8v4.5a1 1 0 001 1h8a1 1 0 001-1V8" /></svg>
-      )}
-    </button>
+    <span className="sharewrap">
+      <button type="button" className="iconbtn sharebtn" onClick={go} aria-label={done ? "Link copied" : label} title={done ? "Link copied" : label}>
+        {done ? (
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+        ) : (
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="2.6" /><circle cx="6" cy="12" r="2.6" /><circle cx="18" cy="19" r="2.6" /><path d="M8.3 10.7l7.4-4.2M8.3 13.3l7.4 4.2" /></svg>
+        )}
+      </button>
+      <span className="sharenote" role="status" aria-live="polite">{done ? "Link copied" : ""}</span>
+    </span>
   );
 }
 
