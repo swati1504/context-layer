@@ -302,9 +302,9 @@ export default function Home() {
                   <button className="ghost" aria-expanded={isOpen} disabled={slot?.status === "loading"} onClick={() => toggleRow(it)}>
                     {slot?.status === "loading" ? "Reading…" : isOpen ? "Hide context" : rich ? "Quick context" : "Get context"}
                   </button>
-                  {rich && <span className="actspacer" />}
-                  {rich && (() => { const w = whyOf(it, it.reason, savedTags); return w ? <WhyThis reason={w.reason} explain={w.explain} /> : null; })()}
-                  {rich && <ShareIcon url={it.url} title={card.headline} />}
+                  {!study && <span className="actspacer" />}
+                  {!study && (() => { const w = whyOf(it, it.reason, savedTags); return w ? <WhyThis reason={w.reason} explain={w.explain} /> : null; })()}
+                  {!study && <ShareIcon url={it.url} title={card?.headline ?? it.title} />}
                   {study && !slot && !isOpen && <button className="quiet" onClick={() => { log("skip_click", { url: it.url, familiarity: fam[it.url] ?? null }); setStages((s) => ({ ...s, [it.url]: "skipped" })); }}>Continue without context</button>}
                 </div>
               )}

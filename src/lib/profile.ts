@@ -9,7 +9,8 @@ export function loadProfile(): Profile | null {
     const s = localStorage.getItem(K);
     if (!s) return null;
     const o = JSON.parse(s) as Partial<Profile>;
-    return { interests: o.interests ?? [], role: o.role ?? "", industry: o.industry ?? "", comfort: o.comfort ?? "beginner" };
+    const mig = (o.interests ?? []).flatMap((i) => (i === "Health and science" ? ["Health and medicine", "Science and space"] : [i]));
+    return { interests: mig, role: o.role ?? "", industry: o.industry ?? "", comfort: o.comfort ?? "beginner" };
   } catch { return null; }
 }
 export function saveProfile(p: Profile) {
@@ -38,7 +39,7 @@ export const COMFORT = [
 
 export { INTERESTS } from "./interests";
 import { matchCount } from "./interests";
-const ROLE_TO_INTEREST: Record<string, string> = { Marketing: "Creators and media", Finance: "Money and business", Healthcare: "Health and science", Education: "Kids and school", "Legal or policy": "Policy and law", Engineer: "AI at work", Student: "Kids and school" };
+const ROLE_TO_INTEREST: Record<string, string> = { Marketing: "Creators and media", Finance: "Money and business", Healthcare: "Health and medicine", Education: "Kids and school", "Legal or policy": "Policy and law", Engineer: "AI at work", Student: "Kids and school" };
 
 // ---- on-device reading history (tags of cards the person opened) ----
 const H = "cl_history";
