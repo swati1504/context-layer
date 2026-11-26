@@ -374,3 +374,4 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
 .w-end p { color: var(--muted); margin: 0 0 24px; font-size: 17px; }
 @media (max-width: 760px) { .w-item { grid-template-columns: 1fr; gap: 24px; } .welcome { padding-top: 40px; } }
 @media (max-width: 640px) { .bar .sep { display: none; } }
+.splitnote { font-size: 15px; font-weight: 600; color: var(--muted); margin: 0 0 16px; padding-top: 8px; }

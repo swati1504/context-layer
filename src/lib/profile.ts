@@ -36,21 +36,8 @@ export const COMFORT = [
   { v: "comfortable", label: "Comfortable", hint: "Keep it brief" },
 ] as const;
 
-// Interests are what the feed ranks on. Each maps to words that show up in headlines.
-export const INTERESTS: Record<string, string[]> = {
-  "AI at work": ["agent", "copilot", "chatgpt", "workplace", "enterprise", "productivity", "automation", "jobs"],
-  "Privacy": ["privacy", "tracking", "surveillance", "consent", "advertis"],
-  "Apps I use": ["instagram", "tiktok", "youtube", "whatsapp", "iphone", "android", "chatgpt", "gemini", "spotify"],
-  "Big Tech": ["google", "apple", "meta", "amazon", "microsoft", "openai", "nvidia", "anthropic"],
-  "Money and business": ["funding", "valuation", "earnings", "revenue", "acquisition", "ipo", "stock", "raises", "billion"],
-  "Chips and hardware": ["chip", "gpu", "nvidia", "hardware", "semiconductor", "satellite", "robot"],
-  "Kids and school": ["kids", "children", "teen", "student", "school", "education", "teacher"],
-  "Health and science": ["health", "medical", "fda", "patient", "drug", "science", "climate"],
-  "Policy and law": ["regulat", "ftc", "court", "law", "lawsuit", "senate", "ban", "policy", "copyright", "antitrust"],
-  "Creators and media": ["creator", "music", "film", "streaming", "artist", "publisher"],
-  "Startups": ["startup", "founder", "seed", "series a", "raises", "seed round"],
-  "Security": ["security", "hack", "breach", "vulnerab", "malware", "attack", "scam"],
-};
+export { INTERESTS } from "./interests";
+import { matchCount } from "./interests";
 const ROLE_TO_INTEREST: Record<string, string> = { Marketing: "Creators and media", Finance: "Money and business", Healthcare: "Health and science", Education: "Kids and school", "Legal or policy": "Policy and law", Engineer: "AI at work", Student: "Kids and school" };
 
 // ---- on-device reading history (tags of cards the person opened) ----
@@ -61,17 +48,20 @@ export function addHistory(tags: string[]) {
 }
 
 // Explainable ranking: every boost has a reason a person can read.
-export function rankReason(p: Profile | null, text: string, history: string[]): { score: number; reason?: string } {
-  const t = ` ${text.toLowerCase()} `;
-  let score = 0, reason: string | undefined;
+// `topics` is what the server tagged the story with (matches on its headline and summary).
+export function rankReason(p: Profile | null, topics: string[], history: string[], text: string): { score: number; reason?: string; match: boolean } {
+  let score = 0, reason: string | undefined, match = false;
   if (p) {
     const mine = [...p.interests, ...(ROLE_TO_INTEREST[p.role] && p.interests.length === 0 ? [ROLE_TO_INTEREST[p.role]] : [])];
     for (const i of mine) {
-      const n = (INTERESTS[i] ?? []).filter((w) => t.includes(w)).length;
+      if (!topics.includes(i)) continue;
+      const n = Math.max(1, matchCount(i, text));
+      match = true;
       if (n > score) { score = n; reason = `Because you picked ${i}`; }
     }
   }
+  const t = ` ${text.toLowerCase()} `;
   const h = history.find((tag) => tag.length > 3 && t.includes(tag));
-  if (h && score < 3) { score = Math.max(score, 1) + 0.5; reason = reason && score > 1.5 ? reason : `Because you read about ${h}`; }
-  return { score, reason };
+  if (h && !match) { score = 0.5; reason = `Because you read about ${h}`; }
+  return { score, reason, match };
 }

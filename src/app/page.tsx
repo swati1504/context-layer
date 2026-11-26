@@ -8,7 +8,7 @@ import { Clipping, ShareIcon, WhyThis } from "@/components/FeedBits";
 import { addHistory, openProfile, rankReason, readHistory, useProfile } from "@/lib/profile";
 import { FREE_LIMIT, atLimit, isStudy, log, markUsed, useFavs, usedCards } from "@/lib/store";
 
-type Item = { title: string; url: string; source: string; teaser: string; published: string; also: { source: string; url: string }[]; card: Card | null };
+type Item = { title: string; url: string; source: string; teaser: string; published: string; topics: string[]; also: { source: string; url: string }[]; card: Card | null };
 type Slot = { status: "loading" | "done" | "error"; card?: Card; error?: string; code?: string };
 type Stage = "ask" | "choose" | "skipped";
 
@@ -109,9 +109,12 @@ export default function Home() {
   const personal = !study && view === "you" && !!profile?.interests.length;
   const ranked = useMemo(() => {
     if (!items) return null;
-    const base = items.map((it, i) => ({ it, i, ...rankReason(profile, it.title + " " + it.teaser + " " + (it.card?.tags.join(" ") ?? ""), hist) }));
-    if (personal) base.sort((a, b) => b.score - a.score || a.i - b.i);
-    return (study ? base.slice(0, 6) : base).map((b) => ({ ...b.it, reason: personal && b.score > 0 ? b.reason : undefined }));
+    const base = items.map((it, i) => ({ it, i, ...rankReason(profile, it.topics ?? [], hist, it.title + " " + it.teaser + " " + (it.card?.tags.join(" ") ?? "")) }));
+    const list = study ? base.slice(0, 6) : base;
+    if (!personal) return { rows: list.map((b) => ({ ...b.it, reason: undefined as string | undefined })), split: -1 };
+    const hit = list.filter((b) => b.match).sort((a, b) => b.score - a.score || a.i - b.i);
+    const rest = list.filter((b) => !b.match).sort((a, b) => b.score - a.score || a.i - b.i);
+    return { rows: [...hit, ...rest].map((b) => ({ ...b.it, reason: b.match || b.score > 0 ? b.reason : undefined })), split: hit.length };
   }, [items, profile, hist, personal, study]);
 
   const savedTags = useMemo(() => favs.flatMap((f) => (f.card?.tags ?? []).map((t: string) => t.toLowerCase())), [favs]);
@@ -240,8 +243,9 @@ export default function Home() {
 
       <div>
         {ranked === null && <p className="empty">Loading stories…</p>}
-        {ranked?.length === 0 && <p className="empty">Could not load the feed right now. Paste a link above to try a story.</p>}
-        {ranked?.map((it) => {
+        {ranked?.rows.length === 0 && <p className="empty">Could not load the feed right now. Paste a link above to try a story.</p>}
+        {personal && ranked && ranked.split === 0 && <p className="fine" style={{ margin: "16px 0 0" }}>No stories match your picks right now. Showing everything instead, and we will keep looking.</p>}
+        {ranked?.rows.map((it, idx) => {
           const slot = slots[it.url];
           const card = cardOf(it);
           const stage: Stage | undefined = study ? stages[it.url] ?? "ask" : undefined;
@@ -303,6 +307,7 @@ export default function Home() {
           );
           return (
             <article className="row" id={"row-" + it.url} key={it.url}>
+              {personal && ranked && ranked.split > 0 && idx === ranked.split && <h2 className="splitnote">Other news today</h2>}
               {card ? <Explainable facts={factsOf(card)} headline={card.headline} url={it.url}>{body}</Explainable> : body}
             </article>
           );
