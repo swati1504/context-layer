@@ -102,10 +102,28 @@ export default function Home() {
     } catch {}
     setUsed(usedCards().length);
     setHist(readHistory());
-    fetch("/api/feed").then((r) => r.json()).then((j) => setItems(j.items ?? [])).catch(() => setItems([]));
+    loadFeed(true);
     const u = new URLSearchParams(window.location.search).get("u");
     if (u) window.location.replace(`/story?u=${encodeURIComponent(u)}`); // old share links
   }, []);
+
+  const lastLoad = useRef(0);
+  function loadFeed(first = false) {
+    lastLoad.current = Date.now();
+    fetch("/api/feed").then((r) => r.json()).then((j) => setItems(j.items ?? [])).catch(() => { if (first) setItems([]); });
+  }
+  // Refresh when someone comes back to the tab after a while. Never during a study session or while a story is open on the page.
+  const busy = useRef(false);
+  useEffect(() => { busy.current = Object.values(open).some(Boolean); }, [open]);
+  useEffect(() => {
+    const back = () => {
+      if (document.visibilityState !== "visible" || study || busy.current) return;
+      if (Date.now() - lastLoad.current > 5 * 60 * 1000) loadFeed();
+    };
+    document.addEventListener("visibilitychange", back);
+    window.addEventListener("focus", back);
+    return () => { document.removeEventListener("visibilitychange", back); window.removeEventListener("focus", back); };
+  }, [study]);
 
   const personal = !study && view === "you" && !!profile?.interests.length;
   const ranked = useMemo(() => {
@@ -113,8 +131,12 @@ export default function Home() {
     const base = items.map((it, i) => ({ it, i, ...rankReason(profile, it.topics ?? [], hist, it.title + " " + it.teaser + " " + (it.card?.tags.join(" ") ?? "")) }));
     const list = study ? base.slice(0, 6) : base;
     if (!personal) return { rows: list.map((b) => ({ ...b.it, reason: undefined as string | undefined })), split: -1 };
-    const hit = list.filter((b) => b.match).sort((a, b) => b.score - a.score || a.i - b.i);
-    const rest = list.filter((b) => !b.match).sort((a, b) => b.score - a.score || a.i - b.i);
+    // Inside each tier, newer and more relevant both count: relevance (how strongly it matches) plus freshness that fades over about a day.
+    const now = Date.now();
+    const fresh = (iso: string) => { const t = +new Date(iso); return t ? 1 / (1 + Math.max(0, now - t) / 36e5 / 24) : 0.3; };
+    const weight = (b: (typeof base)[number]) => 0.4 * Math.min(b.score, 3) / 3 + 0.6 * fresh(b.it.published);
+    const hit = list.filter((b) => b.match).sort((a, b) => weight(b) - weight(a) || a.i - b.i);
+    const rest = list.filter((b) => !b.match).sort((a, b) => weight(b) - weight(a) || a.i - b.i);
     return { rows: [...hit, ...rest].map((b) => ({ ...b.it, reason: b.match || b.score > 0 ? b.reason : undefined })), split: hit.length };
   }, [items, profile, hist, personal, study]);
 
