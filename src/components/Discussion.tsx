@@ -1,6 +1,8 @@
 "use client";
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { log } from "@/lib/store";
+import { addMine, useHandle } from "@/lib/handle";
 
 type C = { id: string; parent: string | null; name: string; body: string; ts: string };
 const ERR: Record<string, string> = {
@@ -21,13 +23,13 @@ const ago = (iso: string) => {
 };
 
 export function Form({ url, title, parent, onPosted, onCancel, placeholder, needsCode }: { url: string; title: string; parent?: string; onPosted: (c: C) => void; onCancel?: () => void; placeholder: string; needsCode?: boolean }) {
-  const [name, setName] = useState("");
+  const name = useHandle();
   const [code, setCode] = useState("");
   const [body, setBody] = useState("");
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
   const [hasCode, setHasCode] = useState(false);
-  useEffect(() => { setName(get("cl_name")); setCode(get("cl_code")); setHasCode(!!get("cl_code")); }, []);
+  useEffect(() => { setCode(get("cl_code")); setHasCode(!!get("cl_code")); }, []);
   async function post(e: React.FormEvent) {
     e.preventDefault();
     setErr(""); setBusy(true);
@@ -35,7 +37,7 @@ export function Form({ url, title, parent, onPosted, onCancel, placeholder, need
       const r = await fetch("/api/comments", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ url, title, name, code, body, parent: parent ?? null }) });
       const j = await r.json();
       if (!r.ok) { setErr(ERR[j.error] ?? ERR.server); return; }
-      put("cl_name", name.trim()); put("cl_code", code.trim());
+      addMine({ id: j.comment.id, url, title, body: j.comment.body, ts: j.comment.ts }); put("cl_code", code.trim());
       log("comment_post", { url, reply: !!parent });
       setBody("");
       onPosted(j.comment);
@@ -43,14 +45,11 @@ export function Form({ url, title, parent, onPosted, onCancel, placeholder, need
   }
   return (
     <form className="cform" onSubmit={post}>
-      <div className="crow">
-        <label>Display name<input value={name} maxLength={24} onChange={(e) => setName(e.target.value)} autoComplete="nickname" /></label>
-        {needsCode && !hasCode && <label>Invite code<input value={code} onChange={(e) => setCode(e.target.value)} autoComplete="off" /></label>}
-      </div>
-      <p className="fine" style={{ margin: "0 0 8px" }}>Your display name appears publicly. A nickname is fine.</p>
+      <p className="fine" style={{ margin: "0 0 8px" }}>Posting as <strong>{name || "…"}</strong>. A name is picked for you, so there is nothing to sign up for. <Link href="/community/me">Your profile</Link></p>
+      {needsCode && !hasCode && <div className="crow"><label>Invite code<input value={code} onChange={(e) => setCode(e.target.value)} autoComplete="off" /></label></div>}
       <textarea aria-label="Your comment" placeholder={placeholder} maxLength={280} rows={parent ? 2 : 3} value={body} onChange={(e) => setBody(e.target.value)} />
       <div className="actions" style={{ marginTop: 8 }}>
-        <button className="btn" disabled={busy || body.trim().length < 2 || name.trim().length < 2 || (!!needsCode && !code.trim())}>{busy ? "Posting…" : parent ? "Reply" : "Post comment"}</button>
+        <button className="btn" disabled={busy || body.trim().length < 2 || !name || (!!needsCode && !code.trim())}>{busy ? "Posting…" : parent ? "Reply" : "Post comment"}</button>
         {onCancel && <button type="button" className="quiet" onClick={onCancel}>Cancel</button>}
         <span className="fine">{280 - body.length} characters left</span>
       </div>

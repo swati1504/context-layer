@@ -21,7 +21,7 @@ export default function Community() {
   return (
     <main className="narrow" style={{ paddingTop: 36 }}>
       <h1 className="page-title">Community</h1>
-      <p className="lede" style={{ marginTop: 0 }}>Talk about tech news with other readers. Comments are opinions, separate from the reporting.</p>
+      <p className="lede" style={{ marginTop: 0 }}>Talk about tech news with other readers. Comments are opinions, separate from the reporting. <Link href="/community/me">Your profile</Link></p>
 
       <Discussion url="community:general" title="General discussion" heading="Open discussion" prompt="Share a thought, question or opinion about tech news" note="Reader opinions · not part of the reporting." />
 
