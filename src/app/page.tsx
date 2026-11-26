@@ -203,8 +203,8 @@ export default function Home() {
           const body = (
             <>
               <div className="meta">
-                <span>{it.source}</span>{it.published && <><span className="dot">·</span><span>{ago(it.published)}</span></>}
-                {card && !study && <><span className="dot">·</span><span>{readTime(card.read_seconds)}</span></>}
+                {it.published && <span>{ago(it.published)}</span>}
+                {card && !study && <>{it.published && <span className="dot">·</span>}<span>{readTime(card.read_seconds)}</span></>}
                 {it.reason && <span className="reason">{it.reason}</span>}
               </div>
               <h3>{rich ? card.headline : it.title}</h3>

@@ -50,3 +50,25 @@ export async function listReports() {
   const r = await rest("reports?select=*&order=ts.desc&limit=200");
   return r ? ((await r.json()) as Record<string, unknown>[]) : [];
 }
+
+export type Comment = { id: string; url: string; title: string; parent: string | null; name: string; body: string; hidden: boolean; ts: string };
+export async function listComments(url: string, includeHidden = false) {
+  const r = await rest(`comments?url=eq.${encodeURIComponent(url)}${includeHidden ? "" : "&hidden=eq.false"}&select=*&order=ts.asc&limit=300`);
+  return r ? ((await r.json()) as Comment[]) : [];
+}
+export async function recentComments(includeHidden = false, limit = 300) {
+  const r = await rest(`comments?${includeHidden ? "" : "hidden=eq.false&"}select=*&order=ts.desc&limit=${limit}`);
+  return r ? ((await r.json()) as Comment[]) : [];
+}
+export async function getComment(id: string) {
+  const r = await rest(`comments?id=eq.${encodeURIComponent(id)}&select=*&limit=1`);
+  return r ? (((await r.json()) as Comment[])[0] ?? null) : null;
+}
+export async function insertComment(c: { url: string; title: string; parent: string | null; name: string; body: string }) {
+  const r = await rest("comments", { method: "POST", body: JSON.stringify(c), prefer: "return=representation" });
+  return r ? (((await r.json()) as Comment[])[0] ?? null) : null;
+}
+export async function setCommentHidden(id: string, hidden: boolean) {
+  const r = await rest(`comments?id=eq.${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify({ hidden }), prefer: "return=minimal" });
+  return !!r;
+}

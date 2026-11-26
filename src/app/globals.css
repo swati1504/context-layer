@@ -279,3 +279,16 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
 .related li:first-child { border-top: 0; }
 .related li a { font-weight: 600; font-size: 16px; line-height: 1.35; text-decoration: none; color: var(--text); }
 .related li a:hover { text-decoration: underline; }
+
+.disc { margin: 40px 0 0; padding-top: 20px; border-top: 2px solid var(--text); }
+.disc h2 { font-weight: 800; font-size: 18px; margin: 0 0 4px; }
+.cmt { padding: 14px 0; border-top: 1px solid var(--line); }
+.cmt.reply { margin: 10px 0 0 18px; padding: 10px 0 0 14px; border-top: 0; border-left: 2px solid var(--line); }
+.cmeta { margin: 0 0 4px; font-size: 14px; }
+.cmeta span { color: var(--muted, #8a8fa3); margin-left: 6px; font-size: 13px; }
+.cbody { margin: 0 0 6px; line-height: 1.5; overflow-wrap: anywhere; }
+.cform { margin: 16px 0 0; }
+.cform .crow { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
+.cform label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; flex: 1; min-width: 150px; }
+.cform input, .cform textarea { font: inherit; font-size: 15px; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--line); background: transparent; color: inherit; width: 100%; box-sizing: border-box; }
+.cform textarea { resize: vertical; }

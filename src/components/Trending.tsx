@@ -22,7 +22,6 @@ export default function Trending() {
         {items?.slice(0, 10).map((t) => (
           <li key={t.url}>
             <Link href={`/story?u=${encodeURIComponent(t.url)}`} onClick={() => log("trending_click", { url: t.url, source: t.source, rank: t.rank })}>{t.title}</Link>
-            <span className="fine">#{t.rank} on {t.source}</span>
           </li>
         ))}
       </ol>

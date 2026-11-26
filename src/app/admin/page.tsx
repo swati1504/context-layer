@@ -9,12 +9,22 @@ export default function Admin() {
   const [msg, setMsg] = useState("");
   const [built, setBuilt] = useState<{ url: string; status: string; verified?: string }[] | null>(null);
   const [busy, setBusy] = useState(false);
+  const [cm, setCm] = useState<{ id: string; title: string; name: string; body: string; hidden: boolean; ts: string }[]>([]);
+  async function loadComments() {
+    const r = await fetch("/api/admin/comments", { headers: { "x-admin-password": pw } });
+    if (r.ok) setCm((await r.json()).comments);
+  }
+  async function hide(id: string, hidden: boolean) {
+    await fetch("/api/admin/comments", { method: "POST", headers: { "x-admin-password": pw, "content-type": "application/json" }, body: JSON.stringify({ id, hidden }) });
+    loadComments();
+  }
 
   async function load() {
     setMsg("");
     const r = await fetch("/api/admin/stats", { headers: { "x-admin-password": pw } });
     if (!r.ok) { setMsg(r.status === 401 ? "Wrong password, or ADMIN_PASSWORD is not set in Vercel." : "Could not load stats."); return; }
     setStats(await r.json());
+    loadComments();
   }
   async function prebuild() {
     setBusy(true); setBuilt(null);
@@ -61,6 +71,15 @@ export default function Admin() {
             <table className="t"><tbody>{built.map((b) => <tr key={b.url}><td>{b.status}{b.verified ? ` (${b.verified})` : ""}</td><td style={{ wordBreak: "break-all" }}>{b.url}</td></tr>)}</tbody></table>
           )}
 
+          <h2 className="feed-head" style={{ marginTop: 36 }}>Comments</h2>
+          {cm.length === 0 ? <p className="fine">No comments yet.</p> : (
+            <table className="t"><tbody>{cm.map((c) => (
+              <tr key={c.id} style={c.hidden ? { opacity: 0.5 } : undefined}>
+                <td><strong>{c.name}</strong>: {c.body}<br /><span className="fine">{c.title}</span></td>
+                <td><button className="quiet" onClick={() => hide(c.id, !c.hidden)}>{c.hidden ? "Show" : "Hide"}</button></td>
+              </tr>
+            ))}</tbody></table>
+          )}
           <h2 className="feed-head" style={{ marginTop: 36 }}>Reported claims</h2>
           {(stats.reports ?? []).length === 0 ? <p className="fine">No reports yet.</p> : (
             <table className="t"><tbody>{(stats.reports ?? []).map((r, i) => <tr key={i}><td>{String(r.reason)}</td><td>{String(r.claim)}</td></tr>)}</tbody></table>
